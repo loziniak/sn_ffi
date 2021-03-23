@@ -1,0 +1,15 @@
+[package]
+name = "sn_ffi"
+version = "0.1.0"
+authors = ["loziniak <maciej@robotix-lozinski.pl>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sn_api = "0.19.1"
+
+
+[lib]
+name = "my_library"
+crate-type = ["cdylib"]
