@@ -4,24 +4,38 @@ use sn_api::Safe;
 
 
 
-fn xorurl_base() -> String {
-    let mut safe = Safe::default();
-    return safe.xorurl_base.to_string();
+#[no_mangle]
+pub extern "C" fn safe_default() -> *mut Safe {
+    let safe: Safe = Safe::default();
+    let safe_box: Box<Safe> = Box::new(safe);
+    Box::into_raw(safe_box)
 }
 
 #[no_mangle]
-pub extern "C" fn ffi_xorurl_base() -> *mut c_char {
-    let rust_string: String = xorurl_base();
+pub extern "C" fn safe_free(ptr: *mut Safe) {
+    if ptr.is_null() {
+        return;
+    }
 
-    // Convert the String into a CString
-    let c_string: CString = CString::new(rust_string).expect("Could not convert to CString");
-
-    // Instead of returning the CString, we return a pointer for it.
-    return c_string.into_raw();
+    unsafe {
+        Box::from_raw(ptr);
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn ffi_cstring_free(ptr: *mut c_char) {
+pub extern "C" fn safe_xorurl_base(ptr: *const Safe) -> *mut c_char {
+    let safe = unsafe {
+        assert!(!ptr.is_null());
+        &*ptr
+    };
+
+    let xorurl_base = CString::new(safe.xorurl_base.to_string()).expect("Could not convert to CString");
+    xorurl_base.into_raw()
+}
+
+
+#[no_mangle]
+pub extern "C" fn cstring_free(ptr: *mut c_char) {
     unsafe {
         if ptr.is_null() {
             // No data there, already freed probably.
