@@ -3,6 +3,14 @@ Red [
 ]
 
 api-root: %../github/sn_api/sn_api
+output: %output
+
+
+letter: charset [#"A" - #"Z" #"a" - #"z" #"_"]
+not-blk-delim: charset [not #"}" #"{"]
+blk: [any not-blk-delim ["{" copy inside any blk "}" | ""]]
+
+string-types: ["String" | "XorUrlBase" | "XorUrl"]
 
 
 clean: function [code [string!]] [
@@ -41,11 +49,11 @@ scan-mod: function [
 	mods: copy []
 
 	mod-declare: [
-		"mod " copy mod any letter ";" (append mods mod) thru newline
+		"mod " copy mod some letter ";" (append mods mod) thru newline
 	]
 
 	declared-mod-pub: [
-		"pub use " copy mod any letter "::" (
+		"pub use " copy mod some letter "::" (
 			if find mods mod [
 				set [next-code next-dir] read-mod-code rejoin [code-dir mod]
 				scan-mod next-code next-dir		;-- recursion
@@ -54,7 +62,7 @@ scan-mod: function [
 	]
 
 	new-mod-pub: [
-		"pub mod " copy mod any letter [
+		"pub mod " copy mod some letter [
 			";" (
 				set [next-code next-dir] read-mod-code rejoin [code-dir mod]
 				scan-mod next-code next-dir		;-- recursion
@@ -66,58 +74,117 @@ scan-mod: function [
 		]
 	]
 
-	tostring-field: [
-		"pub " copy name any letter ": " copy type any letter "," newline
+	string-field: [
+		"pub " copy name some letter ": " copy type some letter "," newline
 	]
 
 	pub-struct: [
-		"pub struct " copy name any letter " " blk (
+		"pub struct " copy name some letter " " blk (
 			st-name: name
 			struct: make map! compose/only [
 				empty?: true
-				tostring-fields: (make map! [])
+				string-fields: (make map! [])
 			]
-			parse inside [any [thru tostring-field (
-				if find tostring-types type [
-					extend struct/tostring-fields reduce [to word! name  type]
+			parse inside [any [thru string-field (
+				if find string-types type [
+					struct/string-fields/(to word! name): type
 					struct/empty?: false
 				]
 			)]]
 
 			unless struct/empty? [
-				extend structure/pub-structs reduce [
-					to word! st-name
-					struct
-				]
+				structure/pub-structs/(to word! st-name): struct
 			]
 		)
 	]
 
-	parse code [
-		any thru [mod-declare | declared-mod-pub | new-mod-pub | pub-struct] thru newline
+	impl-default: [
+		"impl Default for " copy name some letter " {" (
+			structure/pub-structs/(to word! name)/default?: true
+		)
 	]
 
-
-;	print []
+	parse code [
+		any thru [mod-declare | declared-mod-pub | new-mod-pub | pub-struct | impl-default] thru newline
+	]
 ]
 
 
-whitespace: charset reduce [space tab cr lf]
-letter: charset [#"A" - #"Z" #"a" - #"z" #"_"]
-
-;blk: [thru "{" copy inside [thru blk to "}"] "}" | ""]
-not-blk-delim: charset [not #"}" #"{"]
-blk: [any not-blk-delim ["{" copy inside any blk "}" | ""]]
-
-tostring-types: ["String" | "XorUrlBase" | "XorUrl"]
 
 
 structure: make map! compose [
 	pub-structs: (make map! [])
 ]
 
-
 set [lib-code lib-dir] read-mod-code rejoin [dirize api-root  %src/lib.rs]
 scan-mod lib-code lib-dir
 
-probe structure
+
+
+
+tpl: read tpl-path: %sn_ffi/src/lib.tpl.rs
+
+
+replace-args: function [
+	body [string!]
+	args [string!]
+] [
+	foreach [n s] load args [
+		replace/all/case  body  s  get to word! n
+	]
+]
+
+template-rule: function [
+	template-fragment [string!]
+] [
+	rule: reduce [rejoin ["/*bg:" template-fragment " "]]
+	append rule [copy args ["[" thru "]"] "*/"
+
+		copy body
+
+		to ]
+	append/dup  rule  rejoin ["/*bg:" template-fragment "*/"]  2
+	append rule [
+		(
+			replace-args body args
+		)
+		insert body
+	]
+	rule
+]
+
+clean-tpl: function [
+	tpl [string!]
+] [
+	parse tpl [any thru remove ["/*bg:" some letter " [" thru "]*/"
+		thru
+		["/*bg:" some letter "*/"]
+	]]
+	tpl
+]
+
+
+
+
+foreach struct-name keys-of structure/pub-structs [
+	struct: structure/pub-structs/(struct-name)
+	NAME: struct-name
+	LOWNAME: lowercase to string! NAME
+
+	if struct/default? [
+		parse tpl compose/only [any thru (template-rule "OBJ_DEFAULT")]
+	]
+
+	foreach field-name keys-of struct/string-fields [
+		FIELDNAME: field-name
+		parse tpl compose/only [any thru (template-rule "FIELD_STRING")]
+	]
+]
+
+output-file: rejoin [
+	output
+	"/"
+	replace  copy tpl-path  ".tpl"  ""
+]
+print ["--------→" output-file]
+write  output-file  clean-tpl tpl

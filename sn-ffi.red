@@ -5,15 +5,15 @@ Red []
 
 		"sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
 		
-			c_safe_default: "safe_default" [
+			c_safe_default: "_safe_default" [
 				return: [handle!]
 			]
 
-			c_safe_free: "safe_free" [
+			c_safe_free: "_safe_free" [
 				ref [handle!]
 			]
 
-			c_safe_xorurl_base: "safe_xorurl_base" [
+			c_safe_xorurl_base: "_safe_xorurl_base" [
 				ref [handle!]
 				return: [c-string!]
 			]
