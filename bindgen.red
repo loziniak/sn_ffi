@@ -41,6 +41,8 @@ read-mod-code: function [
 	reduce [code code-dir]
 ]
 
+mod-path: [sn_api]
+
 scan-mod: function [
 	code [string!]
 	code-dir [file!]
@@ -62,7 +64,9 @@ scan-mod: function [
 	]
 
 	new-mod-pub: [
-		"pub mod " copy mod some letter [
+		"pub mod " copy mod some letter (
+			append mod-path mod
+		) [
 			";" (
 				set [next-code next-dir] read-mod-code rejoin [code-dir mod]
 				scan-mod next-code next-dir		;-- recursion
@@ -71,7 +75,9 @@ scan-mod: function [
 				probe rejoin [":" mod]
 				scan-mod inside code-dir		;-- recursion
 			)
-		]
+		] (
+			remove back tail mod-path
+		)
 	]
 
 	string-field: [
@@ -83,6 +89,7 @@ scan-mod: function [
 			st-name: name
 			struct: make map! compose/only [
 				empty?: true
+				mod: (copy mod-path)
 				string-fields: (make map! [])
 			]
 			parse inside [any [thru string-field (
@@ -121,6 +128,15 @@ scan-mod lib-code lib-dir
 
 
 
+copy-file: function [
+	source [file!]
+	destination [file!]
+] [
+	print ["--------→" destination]
+	write destination read source
+]
+
+copy-file %sn_ffi/Cargo.toml rejoin [output %/sn_ffi/Cargo.toml]
 
 tpl: read tpl-path: %sn_ffi/src/lib.tpl.rs
 
@@ -170,6 +186,14 @@ foreach struct-name keys-of structure/pub-structs [
 	struct: structure/pub-structs/(struct-name)
 	NAME: struct-name
 	LOWNAME: lowercase to string! NAME
+
+	MOD: copy ""
+	foreach m struct/mod [
+		append MOD to string! m
+		append MOD "::"
+	]
+
+	parse tpl compose/only [any thru (template-rule "API_IMPORT")]
 
 	if struct/default? [
 		parse tpl compose/only [any thru (template-rule "OBJ_DEFAULT")]

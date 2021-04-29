@@ -1,9 +1,8 @@
 use std::os::raw::c_char;
 use std::ffi::CString;
 
-/*bg:API_IMPORT [NAME: "Safe"]*/
-use sn_api::Safe;
-/*bg:API_IMPORT*/
+/*bg:API_IMPORT [MOD:"sn_api::" NAME: "Safe"]*/
+use sn_api::Safe;/*bg:API_IMPORT*/
 
 
 

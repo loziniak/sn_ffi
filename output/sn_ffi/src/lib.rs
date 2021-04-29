@@ -2,6 +2,12 @@ use std::os::raw::c_char;
 use std::ffi::CString;
 
 
+use sn_api::auth_types::AuthedApp;
+use sn_api::SafeAuthdClient;
+use sn_api::AuthdStatus;
+use sn_api::req::AuthReq;
+use sn_api::Safe;
+use sn_api::wallet::WalletSpendableBalance;
 
 
 
