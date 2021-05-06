@@ -5,7 +5,7 @@ authors = ["loziniak <maciej@robotix-lozinski.pl>"]
 edition = "2018"
 
 [dependencies]
-sn_api = "0.24.0"
+sn_api = { git = "https://github.com/loziniak/sn_api", branch = "sn-ffi" }
 
 [lib]
 name = "sn_ffi"

@@ -41,12 +41,14 @@ read-mod-code: function [
 	reduce [code code-dir]
 ]
 
-mod-path: [sn_api]
+mod-path: copy [sn_api]
+probe mods-to-use: copy []
 
 scan-mod: function [
 	code [string!]
 	code-dir [file!]
 	/local next-code next-dir
+	/extern mods-to-use
 ] [
 	mods: copy []
 
@@ -55,7 +57,13 @@ scan-mod: function [
 	]
 
 	declared-mod-pub: [
-		"pub use " copy mod some letter "::" (
+		"pub use "
+		copy mod some letter "::"
+		any [copy to-use-mod some letter "::" (append mods-to-use probe to-use-mod)]
+		copy to-use-str to ";"
+		(
+			probe to-use-str
+
 			if find mods mod [
 				set [next-code next-dir] read-mod-code rejoin [code-dir mod]
 				scan-mod next-code next-dir		;-- recursion
@@ -65,18 +73,26 @@ scan-mod: function [
 
 	new-mod-pub: [
 		"pub mod " copy mod some letter (
-			append mod-path mod
+			either mod = first probe mods-to-use [
+				mods-to-use: next mods-to-use
+			] [
+				append mod-path mod
+			]
 		) [
 			";" (
 				set [next-code next-dir] read-mod-code rejoin [code-dir mod]
 				scan-mod next-code next-dir		;-- recursion
 			)
 			| " " blk (
-				probe rejoin [":" mod]
+				print ["::" mod "……"]
 				scan-mod inside code-dir		;-- recursion
 			)
 		] (
-			remove back tail mod-path
+			either head? mods-to-use [
+				remove back tail mod-path
+			] [
+				mods-to-use: back mods-to-use
+			]
 		)
 	]
 
