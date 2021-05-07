@@ -42,7 +42,7 @@ read-mod-code: function [
 ]
 
 mod-path: copy [sn_api]
-probe mods-to-use: copy []
+mods-to-use: copy []
 
 scan-mod: function [
 	code [string!]
@@ -59,10 +59,10 @@ scan-mod: function [
 	declared-mod-pub: [
 		"pub use "
 		copy mod some letter "::"
-		any [copy to-use-mod some letter "::" (append mods-to-use probe to-use-mod)]
+		any [copy to-use-mod some letter "::" (append mods-to-use to-use-mod)]
 		copy to-use-str to ";"
 		(
-			probe to-use-str
+;			probe to-use-str
 
 			if find mods mod [
 				set [next-code next-dir] read-mod-code rejoin [code-dir mod]
@@ -73,7 +73,7 @@ scan-mod: function [
 
 	new-mod-pub: [
 		"pub mod " copy mod some letter (
-			either mod = first probe mods-to-use [
+			either mod = first mods-to-use [
 				mods-to-use: next mods-to-use
 			] [
 				append mod-path mod
@@ -144,87 +144,139 @@ scan-mod lib-code lib-dir
 
 
 
-copy-file: function [
-	source [file!]
-	destination [file!]
-] [
-	print ["--------→" destination]
-	write destination read source
-]
-
-copy-file %sn_ffi/Cargo.toml rejoin [output %/sn_ffi/Cargo.toml]
-
-tpl: read tpl-path: %sn_ffi/src/lib.tpl.rs
-
-
-replace-args: function [
+replace-args: func [
 	body [string!]
 	args [string!]
+	vars [map!]
+	/local n s
 ] [
 	foreach [n s] load args [
-		replace/all/case  body  s  get to word! n
+		replace/all/case  body  s  vars/(to word! n)
 	]
 ]
 
-template-rule: function [
+template-generate: function [
+	tpl [string!]
 	template-fragment [string!]
+	delimiters [block!]
+	vars [map!]
 ] [
-	rule: reduce [rejoin ["/*bg:" template-fragment " "]]
-	append rule [copy args ["[" thru "]"] "*/"
+	rule: reduce [rejoin [delimiters/1 "bg:" template-fragment " "]]
+	append rule compose [copy args ["[" thru "]"] (delimiters/2)
 
 		copy body
 
 		to ]
-	append/dup  rule  rejoin ["/*bg:" template-fragment "*/"]  2
+	append/dup  rule  rejoin [delimiters/1 "bg:" template-fragment delimiters/2]  2
 	append rule [
 		(
-			replace-args body args
+			replace-args body args vars
 		)
 		insert body
 	]
-	rule
+	rule: compose/only [any thru (rule)]
+	parse tpl rule
 ]
 
 clean-tpl: function [
 	tpl [string!]
+	delimiters [block!]
 ] [
-	parse tpl [any thru remove ["/*bg:" some letter " [" thru "]*/"
+	parse tpl compose/deep [any thru remove [(delimiters/1) "bg:" copy tpname some letter " [" thru (rejoin ["]" delimiters/2])
 		thru
-		["/*bg:" some letter "*/"]
+		[(delimiters/1) "bg:" tpname (delimiters/2)]
 	]]
-	tpl
 ]
 
 
+generate-rust: function [
+	tpl [string!]
+] [
+	delimiters: ["/*" "*/"]
+	vars: make map! []
 
+	foreach struct-name keys-of structure/pub-structs [
+		struct: structure/pub-structs/(struct-name)
+		vars/NAME: struct-name
+		vars/LOWNAME: lowercase to string! NAME
 
-foreach struct-name keys-of structure/pub-structs [
-	struct: structure/pub-structs/(struct-name)
-	NAME: struct-name
-	LOWNAME: lowercase to string! NAME
+		vars/MOD: copy ""
+		foreach m struct/mod [
+			append vars/MOD to string! m
+			append vars/MOD "::"
+		]
 
-	MOD: copy ""
-	foreach m struct/mod [
-		append MOD to string! m
-		append MOD "::"
+		template-generate tpl "API_IMPORT" delimiters vars
+
+		if struct/default? [
+			template-generate tpl "OBJ_DEFAULT" delimiters vars
+		]
+
+		foreach field-name keys-of struct/string-fields [
+			vars/FIELDNAME: field-name
+			template-generate tpl "FIELD_STRING" delimiters vars
+		]
 	]
-
-	parse tpl compose/only [any thru (template-rule "API_IMPORT")]
-
-	if struct/default? [
-		parse tpl compose/only [any thru (template-rule "OBJ_DEFAULT")]
-	]
-
-	foreach field-name keys-of struct/string-fields [
-		FIELDNAME: field-name
-		parse tpl compose/only [any thru (template-rule "FIELD_STRING")]
-	]
+	clean-tpl tpl delimiters
 ]
 
-output-file: rejoin [
-	output
-	"/"
-	replace  copy tpl-path  ".tpl"  ""
+generate-red: function [
+	tpl [string!]
+] [
+	delimiters: ["comment {" "}"]
+	vars: make map! []
+
+	foreach struct-name keys-of structure/pub-structs [
+		struct: structure/pub-structs/(struct-name)
+		vars/NAME: lowercase to string! struct-name
+
+		template-generate tpl "OBJ" delimiters vars
+
+		if struct/default? [
+			template-generate  tpl  rejoin [vars/NAME "_OBJ_DEFAULT"]  delimiters  vars
+		]
+
+		foreach field-name keys-of struct/string-fields [
+			vars/FIELDNAME: field-name
+			vars/FIELDNAME_DASH: replace to string! field-name #"_" #"-"
+			template-generate  tpl  rejoin [vars/NAME "_FIELD_STRING"]  delimiters  vars
+		]
+	]
+	clean-tpl tpl delimiters
 ]
-print ["--------→" output-file]
-write  output-file  clean-tpl tpl
+
+
+parse-template: function [
+	tpl-path [file!]
+	generator [function!]
+] [
+	tpl: read tpl-path
+
+	generator tpl
+
+	destination: rejoin [
+		output
+		%/
+		replace  copy tpl-path  ".tpl"  ""
+	]
+	print ["--------→" destination]
+	write  destination  tpl
+]
+
+
+copy-file: function [
+	source [file!]
+] [
+	destination: rejoin [
+		output
+		%/
+		source
+	]
+	print ["--------→" destination]
+	write  destination  read source
+]
+
+
+parse-template %sn_ffi/src/lib.tpl.rs :generate-rust
+parse-template %sn-ffi.tpl.red :generate-red
+copy-file %sn_ffi/Cargo.toml
