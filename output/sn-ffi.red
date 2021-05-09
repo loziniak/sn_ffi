@@ -3,7 +3,7 @@ Red []
 #system [
 	#import [
 
-		"sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
+		"output/sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
 		
 
 
@@ -446,12 +446,3 @@ walletspendablebalance!: object [
 	
 ]
 
-
-
-
-; test
-
-s: make safe! []
-print s/init
-probe s/xorurl-base
-s/free

@@ -3,7 +3,7 @@ Red []
 #system [
 	#import [
 
-		"sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
+		"output/sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
 		
 comment {bg:OBJ [
 	NAME: "s_afe"
@@ -116,12 +116,3 @@ s_afe!: object [
 	comment {bg:s_afe_FIELD_STRING}
 ]
 comment {bg:OBJ}
-
-
-
-; test
-
-s: make safe! []
-print s/init
-probe s/xorurl-base
-s/free
