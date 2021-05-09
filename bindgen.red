@@ -198,7 +198,7 @@ generate-rust: function [
 	foreach struct-name keys-of structure/pub-structs [
 		struct: structure/pub-structs/(struct-name)
 		vars/NAME: struct-name
-		vars/LOWNAME: lowercase to string! NAME
+		vars/LOWNAME: lowercase to string! vars/NAME
 
 		vars/MOD: copy ""
 		foreach m struct/mod [
