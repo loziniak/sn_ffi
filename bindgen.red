@@ -2,7 +2,7 @@ Red [
 	Name: {FFI interface and Red bindings generator for Safe Network}
 ]
 
-api-root: %../github/sn_api/sn_api
+api-root: %../github/sn_api
 output: %output
 
 
