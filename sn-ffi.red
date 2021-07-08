@@ -18,6 +18,11 @@ Red []
 				return: [c-string!]
 			]
 
+			c_safe_connect: "_safe_connect" [
+				ref [handle!]
+				bootstrap-contact [c-string!]
+			]
+
 			cstring_free: "cstring_free" [
 				ptr [c-string!]
 			]
@@ -59,6 +64,15 @@ safe_xorurl_base: routine [
 	as red-string! SET_RETURN(buffer)
 ]
 
+safe_connect: routine [
+	ref [handle!]
+	bootstrap-contact [string!]
+] [
+	c_safe_connect
+		as handle! ref/value
+		as-c-string string/rs-head bootstrap-contact
+]
+
 
 
 ; hi-level code
@@ -77,6 +91,13 @@ safe!: object [
 
 	xorurl-base: does [
 		safe_xorurl_base ref
+	]
+
+	connect: function [
+		ip [tuple!]
+		port [integer!]
+	] [
+		safe_connect  ref  rejoin [ip #":" port]
 	]
 ]
 
