@@ -1,6 +1,7 @@
 use std::os::raw::c_char;
 use std::ffi::{CString, CStr};
 use sn_api::{BootstrapConfig, Safe};
+use tokio::runtime::Runtime;
 
 
 
@@ -46,8 +47,8 @@ pub extern "C" _safe_connect(ptr: *const Safe, bootstrap_contact: *const c_char)
     let mut bootstrap_contacts = BootstrapConfig::default();
     bootstrap_contacts.insert(bootstrap_contact.parse().expect("Invalid bootstrap address"));
 
-    // how to deal with async "connect" function?
-    _safe.connect(None, None, Some(bootstrap_contacts)).await.expect("Connection error");
+    // how to reuse the Runtime in other functions?
+    Runtime::new().unwrap().block_on(_safe.connect(None, None, Some(bootstrap_contacts)));
 }
 
 #[no_mangle]
