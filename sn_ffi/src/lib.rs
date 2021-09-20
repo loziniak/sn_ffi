@@ -7,9 +7,7 @@ use tokio::runtime::Runtime;
 
 #[no_mangle]
 pub extern "C" fn _safe_default() -> *mut Safe {
-    let _safe: Safe = Safe::default();
-    let _safe_box: Box<Safe> = Box::new(_safe);
-    Box::into_raw(_safe_box)
+    Box::into_raw(Box::new(Safe::default()))
 }
 
 #[no_mangle]
@@ -24,8 +22,8 @@ pub extern "C" fn _safe_free(ptr: *mut Safe) {
 
 #[no_mangle]
 pub extern "C" fn _safe_xorurl_base(ptr: *const Safe) -> *mut c_char {
+    assert!(!ptr.is_null());
     let _safe = unsafe {
-        assert!(!ptr.is_null());
         &*ptr
     };
 
@@ -34,29 +32,36 @@ pub extern "C" fn _safe_xorurl_base(ptr: *const Safe) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" _safe_connect(ptr: *const Safe, bootstrap_contact: *const c_char) {
-    assert!(!ptr.is_null());
-    let _safe = unsafe {
-        &*ptr
+pub extern "C" fn _safe_connect(rt_ptr: *mut Runtime, safe_ptr: *mut Safe, bootstrap_contact: *const c_char) {
+    assert!(!safe_ptr.is_null());
+    assert!(!rt_ptr.is_null());
+
+    let bootstrap_contact_str = unsafe {
+        CStr::from_ptr(bootstrap_contact).to_str().unwrap()
     };
 
-    let bootstrap_contact = unsafe {
-        CStr::from_ptr(bootstrap_contact)
-    }
-
+    println!("_safe_connect: {:?}", bootstrap_contact_str);
     let mut bootstrap_contacts = BootstrapConfig::default();
-    bootstrap_contacts.insert(bootstrap_contact.parse().expect("Invalid bootstrap address"));
+    bootstrap_contacts.insert(bootstrap_contact_str.parse().expect("Invalid bootstrap address"));
 
-    // how to reuse the Runtime in other functions?
-    Runtime::new().unwrap().block_on(_safe.connect(None, None, Some(bootstrap_contacts)));
+    unsafe {
+        let _safe = &mut *safe_ptr;
+        let rt = &mut *rt_ptr;
+        rt.block_on(_safe.connect(None, None, Some(bootstrap_contacts))).unwrap_or(());
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn cstring_free(ptr: *mut c_char) {
-    if ptr.is_null() {
+pub extern "C" fn init_runtime() -> *mut Runtime {
+    Box::into_raw(Box::new(Runtime::new().unwrap()))
+}
+
+#[no_mangle]
+pub extern "C" fn cstring_free(cstring: *mut c_char) {
+    if cstring.is_null() {
         return;
     }
     unsafe {
-        CString::from_raw(ptr);
+        CString::from_raw(cstring);
     }
 }

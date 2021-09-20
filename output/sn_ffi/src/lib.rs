@@ -7,7 +7,6 @@ use sn_api::SafeAuthdClient;
 use sn_api::AuthdStatus;
 use sn_api::req::AuthReq;
 use sn_api::Safe;
-use sn_api::wallet::WalletSpendableBalance;
 
 
 
@@ -129,28 +128,6 @@ pub extern "C" fn safe_xorurl_base(ptr: *const Safe) -> *mut c_char {
 
     let xorurl_base = CString::new(safe.xorurl_base.to_string()).expect("Could not convert to CString");
     xorurl_base.into_raw()
-}
-
-#[no_mangle]
-pub extern "C" fn walletspendablebalance_sk(ptr: *const WalletSpendableBalance) -> *mut c_char {
-    let walletspendablebalance = unsafe {
-        assert!(!ptr.is_null());
-        &*ptr
-    };
-
-    let sk = CString::new(walletspendablebalance.sk.to_string()).expect("Could not convert to CString");
-    sk.into_raw()
-}
-
-#[no_mangle]
-pub extern "C" fn walletspendablebalance_xorurl(ptr: *const WalletSpendableBalance) -> *mut c_char {
-    let walletspendablebalance = unsafe {
-        assert!(!ptr.is_null());
-        &*ptr
-    };
-
-    let xorurl = CString::new(walletspendablebalance.xorurl.to_string()).expect("Could not convert to CString");
-    xorurl.into_raw()
 }
 
 

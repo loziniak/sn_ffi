@@ -19,8 +19,13 @@ Red []
 			]
 
 			c_safe_connect: "_safe_connect" [
+				rt [handle!]
 				ref [handle!]
 				bootstrap-contact [c-string!]
+			]
+
+			init_runtime: "init_runtime" [
+				return: [handle!]
 			]
 
 			cstring_free: "cstring_free" [
@@ -29,6 +34,7 @@ Red []
 		]
 	]
 	
+	tokio_runtime: init_runtime
 ]
 
 
@@ -69,8 +75,9 @@ safe_connect: routine [
 	bootstrap-contact [string!]
 ] [
 	c_safe_connect
+		tokio_runtime
 		as handle! ref/value
-		as-c-string string/rs-head bootstrap-contact
+		as c-string! string/rs-head bootstrap-contact
 ]
 
 
@@ -100,12 +107,3 @@ safe!: object [
 		safe_connect  ref  rejoin [ip #":" port]
 	]
 ]
-
-
-
-; test
-
-s: make safe! []
-print s/init
-probe s/xorurl-base
-s/free

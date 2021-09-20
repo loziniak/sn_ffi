@@ -31,12 +31,17 @@ comment {bg:OBJ [
 
 comment {bg:OBJ}
 
+			init_runtime: "init_runtime" [
+				return: [handle!]
+			]
+
 			cstring_free: "cstring_free" [
 				ptr [c-string!]
 			]
 		]
 	]
 	
+	tokio_runtime: init_runtime
 ]
 
 

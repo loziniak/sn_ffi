@@ -90,21 +90,9 @@ Red []
 
 
 
-	
-
-	
-			c_walletspendablebalance_sk: "walletspendablebalance_sk" [
-				ref [handle!]
-				return: [c-string!]
+			init_runtime: "init_runtime" [
+				return: [handle!]
 			]
-	
-			c_walletspendablebalance_xorurl: "walletspendablebalance_xorurl" [
-				ref [handle!]
-				return: [c-string!]
-			]
-	
-
-
 
 			cstring_free: "cstring_free" [
 				ptr [c-string!]
@@ -112,6 +100,7 @@ Red []
 		]
 	]
 	
+	tokio_runtime: init_runtime
 ]
 
 
@@ -305,43 +294,6 @@ safe_xorurl_base: routine [
 
 
 
-
-
-
-walletspendablebalance_sk: routine [
-	ref [handle!]
-	return: [string!]
-	/local str buffer size
-] [
-	str: c_walletspendablebalance_sk as handle! ref/value
-
-	size: length? str
-	buffer: string/load str size UTF-8
-
-	cstring_free str
-
-	as red-string! SET_RETURN(buffer)
-]
-
-walletspendablebalance_xorurl: routine [
-	ref [handle!]
-	return: [string!]
-	/local str buffer size
-] [
-	str: c_walletspendablebalance_xorurl as handle! ref/value
-
-	size: length? str
-	buffer: string/load str size UTF-8
-
-	cstring_free str
-
-	as red-string! SET_RETURN(buffer)
-]
-
-
-
-
-
 ; hi-level code
 
 
@@ -426,22 +378,6 @@ safe!: object [
 	
 	xorurl-base: does [
 		safe_xorurl_base ref
-	]
-	
-]
-
-walletspendablebalance!: object [
-	ref: none
-
-	
-
-	
-	sk: does [
-		walletspendablebalance_sk ref
-	]
-	
-	xorurl: does [
-		walletspendablebalance_xorurl ref
 	]
 	
 ]
