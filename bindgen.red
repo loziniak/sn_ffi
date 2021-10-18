@@ -50,10 +50,11 @@ scan-mod: function [
 	/local next-code next-dir
 	/extern mods-to-use
 ] [
-	mods: copy []
-
 	mod-declare: [
-		"mod " copy mod some letter ";" (append mods mod) thru newline
+		"mod " copy mod some letter ";" (
+			set [next-code next-dir] read-mod-code rejoin [code-dir mod]
+			scan-mod next-code next-dir		;-- recursion
+		) thru newline
 	]
 
 	declared-mod-pub: [
@@ -61,14 +62,6 @@ scan-mod: function [
 		copy mod some letter "::"
 		any [copy to-use-mod some letter "::" (append mods-to-use to-use-mod)]
 		copy to-use-str to ";"
-		(
-;			probe to-use-str
-
-			if find mods mod [
-				set [next-code next-dir] read-mod-code rejoin [code-dir mod]
-				scan-mod next-code next-dir		;-- recursion
-			]
-		)
 	]
 
 	new-mod-pub: [
@@ -107,6 +100,7 @@ scan-mod: function [
 				empty?: true
 				mod: (copy mod-path)
 				string-fields: (make map! [])
+				methods: (make map! [])
 			]
 			parse inside [any [thru string-field (
 				if find string-types type [
@@ -126,9 +120,33 @@ scan-mod: function [
 			structure/pub-structs/(to word! name)/default?: true
 		)
 	]
+	
+	params: ["(" copy fn-params to ")" ")"]
+	
+	impl: [
+		"impl " copy st-name some letter " " blk (
+			;structure/pub-structs/(to word! st-name)
+			print st-name
+			parse inside [
+				any thru [
+					"pub async fn " copy fn-name some letter
+					params
+					" -> " copy fn-return to " {"
+					(
+						print [
+							fn-name lf
+							fn-params lf
+							fn-return lf
+						]
+					)
+				]
+			]
+			
+		)
+	]
 
 	parse code [
-		any thru [mod-declare | declared-mod-pub | new-mod-pub | pub-struct | impl-default] thru newline
+		any thru [mod-declare | declared-mod-pub | new-mod-pub | pub-struct | impl-default | impl] thru newline
 	]
 ]
 
