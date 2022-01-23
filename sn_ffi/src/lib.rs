@@ -1,8 +1,11 @@
 use std::os::raw::c_char;
 use std::ffi::{CString, CStr};
-use sn_api::{BootstrapConfig, Safe};
+use sn_api::{Safe};
 use tokio::runtime::Runtime;
-
+use redbin::{de::from_bytes as from_redbin, ser::to_bytes as to_redbin};
+use safe_network::types::Keypair;
+use std::path::Path;
+use std::{collections::BTreeSet, net::SocketAddr};
 
 
 #[no_mangle]
@@ -32,22 +35,26 @@ pub extern "C" fn _safe_xorurl_base(ptr: *const Safe) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn _safe_connect(rt_ptr: *mut Runtime, safe_ptr: *mut Safe, bootstrap_contact: *const c_char) {
+pub extern "C" fn _safe_connect(rt_ptr: *mut Runtime, safe_ptr: *mut Safe, params: *const u8, params_size: usize) {
+    println!("_safe_connect pointer: {:?}, size: {:?}", params, params_size);
+
     assert!(!safe_ptr.is_null());
     assert!(!rt_ptr.is_null());
+    
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    println!("_safe_connect u8: {:?}", params);
 
-    let bootstrap_contact_str = unsafe {
-        CStr::from_ptr(bootstrap_contact).to_str().unwrap()
-    };
-
-    println!("_safe_connect: {:?}", bootstrap_contact_str);
-    let mut bootstrap_contacts = BootstrapConfig::default();
-    bootstrap_contacts.insert(bootstrap_contact_str.parse().expect("Invalid bootstrap address"));
+    let params: (
+        Option<Keypair>,
+        Option<&Path>,
+        (bls::PublicKey, BTreeSet<SocketAddr>)  // TODO: NodeConfig
+    ) = from_redbin(params).unwrap();
+    println!("_safe_connect params: {:?}", params);
 
     unsafe {
         let _safe = &mut *safe_ptr;
         let rt = &mut *rt_ptr;
-        rt.block_on(_safe.connect(None, None, Some(bootstrap_contacts))).unwrap_or(());
+        rt.block_on(_safe.connect(params.0, params.1, params.2)).unwrap_or(());
     }
 }
 
