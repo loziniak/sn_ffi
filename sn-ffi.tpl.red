@@ -17,7 +17,7 @@ comment {bg:OBJ [
 			c_s_afe_free: "s_afe_free" [
 				ref [handle!]
 			]
-	comment {bg:s_afe_OBJ_DEFAULT}
+	comment {bg-end:s_afe_OBJ_DEFAULT}
 
 	comment {bg:s_afe_FIELD_STRING [
 		FIELDNAME: "xorurl_base"
@@ -27,9 +27,9 @@ comment {bg:OBJ [
 				ref [handle!]
 				return: [c-string!]
 			]
-	comment {bg:s_afe_FIELD_STRING}
+	comment {bg-end:s_afe_FIELD_STRING}
 
-comment {bg:OBJ}
+comment {bg-end:OBJ}
 
 			init_runtime: "init_runtime" [
 				return: [handle!]
@@ -67,7 +67,7 @@ s_afe_free: routine [
 ] [
 	c_s_afe_free as handle! ref/value
 ]
-comment {bg:s_afe_OBJ_DEFAULT}
+comment {bg-end:s_afe_OBJ_DEFAULT}
 
 comment {bg:s_afe_FIELD_STRING [
 	FIELDNAME: "xorurl_base"
@@ -87,9 +87,9 @@ s_afe_xorurl_base: routine [
 
 	as red-string! SET_RETURN(buffer)
 ]
-comment {bg:s_afe_FIELD_STRING}
+comment {bg-end:s_afe_FIELD_STRING}
 
-comment {bg:OBJ}
+comment {bg-end:OBJ}
 
 
 ; hi-level code
@@ -109,7 +109,7 @@ s_afe!: object [
 		s_afe_free ref
 		ref: none
 	]
-	comment {bg:s_afe_OBJ_DEFAULT}
+	comment {bg-end:s_afe_OBJ_DEFAULT}
 
 	comment {bg:s_afe_FIELD_STRING [
 		FIELDNAME: "xorurl_base"
@@ -118,6 +118,6 @@ s_afe!: object [
 	xorurl-base: does [
 		s_afe_xorurl_base ref
 	]
-	comment {bg:s_afe_FIELD_STRING}
+	comment {bg-end:s_afe_FIELD_STRING}
 ]
-comment {bg:OBJ}
+comment {bg-end:OBJ}
