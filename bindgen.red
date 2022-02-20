@@ -2,7 +2,7 @@ Red [
 	Name: {FFI interface and Red bindings generator for Safe Network}
 ]
 
-api-root: %../github/sn_api
+api-root: %../github/safe_network/sn_api
 output: %output
 
 
@@ -42,13 +42,11 @@ read-mod-code: function [
 ]
 
 mod-path: copy [sn_api]
-mods-to-use: copy []
 
 scan-mod: function [
 	code [string!]
 	code-dir [file!]
 	/local next-code next-dir
-	/extern mods-to-use
 ] [
 	string-field: [
 		"pub " copy name some letter ": " copy type some letter "," newline
@@ -80,14 +78,10 @@ scan-mod: function [
 		)
 	]
 	
-; 	param: [copy param-name some letter ": " copy param-type some letter (fn-params/(param-name): param-type)]	
-; 	params: ["(" (fn-params: make map! []) any thru param thru ")"]
-; 	param: [copy param-name some letter]	
-; 	params: ["(" (fn-params: make map! []) any thru param thru ")"]
 
 	param: [
-		["&mut self"
-			| [copy param-name some letter ": " copy param-type to ["," | end] (params-map/(to word! param-name): param-type)]
+		[[["&mut self" | "&self"] (method/self: true)]
+			| [copy param-name some letter ": " copy param-type to ["," | end] (method/params/(to word! param-name): param-type)]
 		]
 		["," | end]
 	]
@@ -110,12 +104,12 @@ scan-mod: function [
 					"(" copy fn-params to ")" ")"
 					" -> " copy fn-return to " {"
 					(
-						params-map: make map! []
-						parse fn-params params
 						method: make map! compose [
-							params: (params-map)
+							params: (make map! [])
 							return: (fn-return)
+							self: (false)
 						]
+						parse fn-params params
 						structure/pub-structs/(to word! st-name)/methods/(to word! fn-name): method
 						structure/pub-structs/(to word! st-name)/empty?: false
 					)
@@ -133,45 +127,32 @@ scan-mod: function [
 
 	mod-declare: [
 		"mod " copy mod some letter ";" (
+; 			append mod-path mod
 			set [next-code next-dir] read-mod-code rejoin [code-dir mod]
 			scan-mod next-code next-dir		;-- recursion
+; 			remove back tail mod-path
 		) thru newline
-	]
-
-	declared-mod-pub: [
-		"pub use "
-		copy mod some letter "::"
-		any [copy to-use-mod some letter "::" (append mods-to-use to-use-mod)]
-		copy to-use-str to ";"
 	]
 
 	new-mod-pub: [
 		"pub mod " copy mod some letter (
-			either mod = first mods-to-use [
-				mods-to-use: next mods-to-use
-			] [
-				append mod-path mod
-			]
+			append mod-path mod
 		) [
 			";" (
 				set [next-code next-dir] read-mod-code rejoin [code-dir mod]
 				scan-mod next-code next-dir		;-- recursion
 			)
 			| " " blk (
-				print ["::" mod "……"]
+				print [" ::" mod "……"]
 				scan-mod inside code-dir		;-- recursion
 			)
 		] (
-			either head? mods-to-use [
-				remove back tail mod-path
-			] [
-				mods-to-use: back mods-to-use
-			]
+			remove back tail mod-path
 		)
 	]
 
 	parse code [
-		any thru [mod-declare | declared-mod-pub | new-mod-pub] thru newline
+		any thru [mod-declare | new-mod-pub] thru newline
 	]
 ]
 
@@ -225,10 +206,16 @@ clean-tpl: function [
 	tpl [string!]
 	delimiters [block!]
 ] [
-	parse tpl compose/deep [any thru remove [(delimiters/1) "bg:" copy tpname some letter " [" thru (rejoin ["]" delimiters/2])
-		thru
-		[(delimiters/1) "bg-end:" tpname (delimiters/2)]
-	]]
+	while [
+		start: find tpl rejoin [delimiters/1 "bg:"]
+	] [
+		tpl: at start length? rejoin [delimiters/1 "bg:"]
+		
+		name: copy/part  tpl  tpl: find tpl " "
+		end: find/tail tpl rejoin ["bg-end" name delimiters/2]
+		
+		tpl: remove/part start end
+	]
 ]
 
 
@@ -238,7 +225,7 @@ generate-rust: function [
 	delimiters: ["/*" "*/"]
 	vars: make map! []
 
-	foreach struct-name keys-of structure/pub-structs [
+	foreach struct-name sort keys-of structure/pub-structs [
 		struct: structure/pub-structs/(struct-name)
 		unless struct/empty? [
 			vars/NAME: struct-name
@@ -256,25 +243,42 @@ generate-rust: function [
 				template-generate tpl "OBJ_DEFAULT" delimiters vars
 			]
 	
-			foreach field-name keys-of struct/string-fields [
+			foreach field-name sort keys-of struct/string-fields [
 				vars/FIELDNAME: field-name
 				template-generate tpl "FIELD_STRING" delimiters vars
 			]
 
-			foreach method-name keys-of struct/methods [
+			foreach method-name sort keys-of struct/methods [
+				method: struct/methods/(method-name)
 				vars/METHODNAME: method-name
 				template-generate tpl "METHOD" delimiters vars
 
-				params: struct/methods/(method-name)/params
+				if method/self [
+					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_SELF"] delimiters vars
+				]
+				params: method/params
 				param-num: 0
 				foreach param-name keys-of params [
 					vars/PARAMNAME: param-name
 					vars/PARAMTYPE: params/(param-name)
 					vars/PARAMNUM: param-num
+					vars/COMMA: either any [
+						param-num > 0
+						method/self
+					] [", "] [""]
+					either all [
+						#"&" = first vars/PARAMTYPE
+						"&str" <> vars/PARAMTYPE
+						"&[u8]" <> vars/PARAMTYPE
+					] [
+						vars/BORROW: "&"
+						vars/PARAMTYPE = remove vars/PARAMTYPE
+					] [
+						vars/BORROW: ""
+					]
 					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_PARAM"] delimiters vars
 					param-num: param-num + 1
 				]
-
 			]
 		]
 	]
@@ -287,7 +291,7 @@ generate-red: function [
 	delimiters: ["comment {" "}"]
 	vars: make map! []
 
-	foreach struct-name keys-of structure/pub-structs [
+	foreach struct-name sort keys-of structure/pub-structs [
 		struct: structure/pub-structs/(struct-name)
 		unless struct/empty? [
 			vars/NAME: lowercase to string! struct-name
@@ -297,7 +301,7 @@ generate-red: function [
 				template-generate  tpl  rejoin [vars/NAME "_OBJ_DEFAULT"]  delimiters  vars
 			]
 	
-			foreach field-name keys-of struct/string-fields [
+			foreach field-name sort keys-of struct/string-fields [
 				vars/FIELDNAME: field-name
 				vars/FIELDNAME_DASH: replace to string! field-name #"_" #"-"
 				template-generate  tpl  rejoin [vars/NAME "_FIELD_STRING"]  delimiters  vars

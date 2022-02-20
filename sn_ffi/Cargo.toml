@@ -5,11 +5,12 @@ authors = ["loziniak <maciej@robotix-lozinski.pl>"]
 edition = "2018"
 
 [dependencies]
-tokio = "1.5.0"
-sn_api = "~0.38"
-safe_network = "= 0.33.18"
-redbin = { path = "../../redbin" }
+tokio = "1.6.0"
+sn_api = { path = "../../../github/safe_network/sn_api" }
+safe_network = "= 0.55.3"
+redbin = { path = "../../../redbin" }
 bls = { package = "blsttc", version = "*" }
+bytes = "1.0.1"
 
 [lib]
 name = "sn_ffi"

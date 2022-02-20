@@ -2,13 +2,17 @@ use std::os::raw::c_char;
 use std::ffi::{CString, CStr};
 use tokio::runtime::Runtime;
 use redbin::{de::from_bytes as from_redbin, ser::to_bytes as to_redbin};
+use bytes::Bytes;
 
-use safe_network::types::Keypair;
 use std::path::Path;
+use std::time::Duration;
 use std::{collections::BTreeSet, net::SocketAddr};
 
-/*bg:API_IMPORT [MOD:"sn_api::" NAME: "Safe"]*/
-use sn_api::Safe;/*bg-end:API_IMPORT*/
+use sn_api::{NodeConfig, XorUrlBase, Keypair, BytesAddress, XorName, SafeUrl, VersionHash, ContentType, SafeAuthReqId, SecretKey,
+    register::{EntryHash, Entry}, resolver::Range, multimap::MultimapKeyValue};
+
+
+use sn_api::{AuthdStatus, AuthedApp, req::AuthReq, Safe, SafeAuthdClient, SafeAuthenticator};
 
 
 
@@ -78,7 +82,7 @@ pub extern "C" fn s_afe_connect(rt_ptr: *mut Runtime, s_afe_ptr: *mut Safe, para
     unsafe {
         let s_afe = &mut *s_afe_ptr;
         let rt = &mut *rt_ptr;
-        rt.block_on(Safe::connect(s_afe/*bg:s_afe_connect_PARAM [PARAMNUM: "0"]*/, params.0/*bg-end:s_afe_connect_PARAM*/)).unwrap_or(());
+        rt.block_on(Safe::connect(/*bg:s_afe_connect_SELF []*/s_afe/*bg-end:s_afe_connect_SELF*//*bg:s_afe_connect_PARAM [PARAMNUM: "0" COMMA: ", " BORROW: "&"]*/, &params.0/*bg-end:s_afe_connect_PARAM*/));
     }
 }
 /*bg-end:METHOD*/

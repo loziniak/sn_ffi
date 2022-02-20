@@ -8,17 +8,9 @@ Red []
 
 
 	
-			c_safe_default: "safe_default" [
-				return: [handle!]
-			]
-
-			c_safe_free: "safe_free" [
-				ref [handle!]
-			]
-	
 
 	
-			c_safe_xorurl_base: "safe_xorurl_base" [
+			c_authdstatus_authd_version: "authdstatus_authd_version" [
 				ref [handle!]
 				return: [c-string!]
 			]
@@ -28,6 +20,21 @@ Red []
 
 	
 
+	
+			c_authedapp_id: "authedapp_id" [
+				ref [handle!]
+				return: [c-string!]
+			]
+	
+			c_authedapp_name: "authedapp_name" [
+				ref [handle!]
+				return: [c-string!]
+			]
+	
+			c_authedapp_vendor: "authedapp_vendor" [
+				ref [handle!]
+				return: [c-string!]
+			]
 	
 
 
@@ -56,7 +63,7 @@ Red []
 	
 
 	
-			c_authdstatus_authd_version: "authdstatus_authd_version" [
+			c_safe_xorurl_base: "safe_xorurl_base" [
 				ref [handle!]
 				return: [c-string!]
 			]
@@ -77,27 +84,6 @@ Red []
 
 	
 
-	
-
-
-
-	
-
-	
-			c_authedapp_id: "authedapp_id" [
-				ref [handle!]
-				return: [c-string!]
-			]
-	
-			c_authedapp_name: "authedapp_name" [
-				ref [handle!]
-				return: [c-string!]
-			]
-	
-			c_authedapp_vendor: "authedapp_vendor" [
-				ref [handle!]
-				return: [c-string!]
-			]
 	
 
 
@@ -123,28 +109,14 @@ Red []
 
 
 
-safe_default: routine [
-	return: [handle!]
-	/local ref
-] [
-	ref: handle/box as integer! c_safe_default
-	as red-handle! SET_RETURN(ref)
-]
-
-safe_free: routine [
-	ref [handle!]
-] [
-	c_safe_free as handle! ref/value
-]
 
 
-
-safe_xorurl_base: routine [
+authdstatus_authd_version: routine [
 	ref [handle!]
 	return: [string!]
 	/local str buffer size
 ] [
-	str: c_safe_xorurl_base as handle! ref/value
+	str: c_authdstatus_authd_version as handle! ref/value
 
 	size: length? str
 	buffer: string/load str size UTF-8
@@ -160,6 +132,51 @@ safe_xorurl_base: routine [
 
 
 
+
+authedapp_id: routine [
+	ref [handle!]
+	return: [string!]
+	/local str buffer size
+] [
+	str: c_authedapp_id as handle! ref/value
+
+	size: length? str
+	buffer: string/load str size UTF-8
+
+	cstring_free str
+
+	as red-string! SET_RETURN(buffer)
+]
+
+authedapp_name: routine [
+	ref [handle!]
+	return: [string!]
+	/local str buffer size
+] [
+	str: c_authedapp_name as handle! ref/value
+
+	size: length? str
+	buffer: string/load str size UTF-8
+
+	cstring_free str
+
+	as red-string! SET_RETURN(buffer)
+]
+
+authedapp_vendor: routine [
+	ref [handle!]
+	return: [string!]
+	/local str buffer size
+] [
+	str: c_authedapp_vendor as handle! ref/value
+
+	size: length? str
+	buffer: string/load str size UTF-8
+
+	cstring_free str
+
+	as red-string! SET_RETURN(buffer)
+]
 
 
 
@@ -220,12 +237,12 @@ authreq_app_vendor: routine [
 
 
 
-authdstatus_authd_version: routine [
+safe_xorurl_base: routine [
 	ref [handle!]
 	return: [string!]
 	/local str buffer size
 ] [
-	str: c_authdstatus_authd_version as handle! ref/value
+	str: c_safe_xorurl_base as handle! ref/value
 
 	size: length? str
 	buffer: string/load str size UTF-8
@@ -268,87 +285,38 @@ safeauthdclient_authd_endpoint: routine [
 
 
 
-
-
-
-authedapp_id: routine [
-	ref [handle!]
-	return: [string!]
-	/local str buffer size
-] [
-	str: c_authedapp_id as handle! ref/value
-
-	size: length? str
-	buffer: string/load str size UTF-8
-
-	cstring_free str
-
-	as red-string! SET_RETURN(buffer)
-]
-
-authedapp_name: routine [
-	ref [handle!]
-	return: [string!]
-	/local str buffer size
-] [
-	str: c_authedapp_name as handle! ref/value
-
-	size: length? str
-	buffer: string/load str size UTF-8
-
-	cstring_free str
-
-	as red-string! SET_RETURN(buffer)
-]
-
-authedapp_vendor: routine [
-	ref [handle!]
-	return: [string!]
-	/local str buffer size
-] [
-	str: c_authedapp_vendor as handle! ref/value
-
-	size: length? str
-	buffer: string/load str size UTF-8
-
-	cstring_free str
-
-	as red-string! SET_RETURN(buffer)
-]
-
-
-
-
-
 ; hi-level code
 
 
-safe!: object [
+authdstatus!: object [
 	ref: none
 
 	
-	init: does [
-		ref: safe_default
-	]
-
-	free: does [
-		safe_free ref
-		ref: none
-	]
-	
 
 	
-	xorurl-base: does [
-		safe_xorurl_base ref
+	authd-version: does [
+		authdstatus_authd_version ref
 	]
 	
 ]
 
-safeappclient!: object [
+authedapp!: object [
 	ref: none
 
 	
 
+	
+	id: does [
+		authedapp_id ref
+	]
+	
+	name: does [
+		authedapp_name ref
+	]
+	
+	vendor: does [
+		authedapp_vendor ref
+	]
 	
 ]
 
@@ -372,14 +340,14 @@ authreq!: object [
 	
 ]
 
-authdstatus!: object [
+safe!: object [
 	ref: none
 
 	
 
 	
-	authd-version: does [
-		authdstatus_authd_version ref
+	xorurl-base: does [
+		safe_xorurl_base ref
 	]
 	
 ]
@@ -401,26 +369,6 @@ safeauthenticator!: object [
 
 	
 
-	
-]
-
-authedapp!: object [
-	ref: none
-
-	
-
-	
-	id: does [
-		authedapp_id ref
-	]
-	
-	name: does [
-		authedapp_name ref
-	]
-	
-	vendor: does [
-		authedapp_vendor ref
-	]
 	
 ]
 
