@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 tokio = "1.6.0"
-sn_api = { path = "../../../github/safe_network/sn_api" }
+sn_api = { path = "../../../github/safe_network_archived/sn_api" }
 safe_network = "= 0.55.3"
 redbin = { path = "../../../redbin" }
 bls = { package = "blsttc", version = "*" }

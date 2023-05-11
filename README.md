@@ -17,6 +17,6 @@ cargo build --target=i686-unknown-linux-gnu
 
 # red test
 cd ../..
-red -c -o bin/sn-ffi-test sn-ffi-test.red
+./red-toolchain-08may23-652d66a4f -c -o bin/sn-ffi-test sn-ffi-test.red
 bin/sn-ffi-test
 ```

@@ -3,7 +3,7 @@ Red []
 #system [
 	#import [
 
-		"output/sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
+		"sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
 		
 
 
@@ -2043,6 +2043,18 @@ r_safeauthenticator_unlock: routine [
 
 ; hi-level code
 
+bls-key: function [
+	key-bin [binary!]
+	return: [block!]
+] [
+	key: copy []
+	foreach b key-bin [
+		append key b
+	]
+	reduce [key]
+]
+
+
 
 authdstatus!: object [
 	ref: none
@@ -2128,3 +2140,44 @@ safeauthenticator!: object [
 	
 ]
 
+
+safe!: make safe! [
+
+	init: does [
+; 		ref: safe_default
+		ref: none
+	]
+
+	free: does [
+; 		safe_free ref
+		ref: none
+	]
+
+	connect: function [
+		ip [tuple!]
+		port [integer!]
+	] [
+		genesis-key: bls-key #{					
+			8640 e62c c44e 75cf
+			4fad c8ee 91b7 4b4c
+			f0fd 2c09 84fb 0e3a
+			b40f 0268 0685 7d8c
+			41f0 1d37 2522 3c55
+			b1ef 87d6 69f5 e2cc
+		}
+
+		safe_connect
+			ref
+			compose/deep [ ;bootstrap_config
+				(genesis-key)
+				[
+					(rejoin [ip #":" port])
+					(rejoin [ip #":" port + 1])		;-- NODES_TO_CONTACT_PER_STARTUP_BATCH = 3  @ safe_network/src/client/connections/messaging.rs
+					(rejoin [ip #":" port + 2])
+				]
+			]
+			none ;keypair
+			none ;config_path
+			["secs" 10 "nanos" 0] ;timeout
+	]
+]

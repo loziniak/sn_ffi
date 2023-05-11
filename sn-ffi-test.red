@@ -1,6 +1,6 @@
 Red []
 
-#include %sn-ffi.red
+#include %output/sn-ffi.red
 
 s: make safe! []
 print s/init
