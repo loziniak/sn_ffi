@@ -2,7 +2,7 @@ Red [
 	Name: {FFI interface and Red bindings generator for Safe Network}
 ]
 
-api-root: %../github/safe_network/sn_api
+api-root: %../github/safe_network_archived/sn_api
 output: %output
 
 
@@ -78,7 +78,6 @@ scan-mod: function [
 		)
 	]
 	
-
 	param: [
 		[[["&mut self" | "&self"] (method/self: true)]
 			| [copy param-name some letter ": " copy param-type to ["," | end] (method/params/(to word! param-name): param-type)]
@@ -87,14 +86,6 @@ scan-mod: function [
 	]
 	params: [any thru param]
 
-; 	connect 
-;
-; 	        &mut self,
-; 	        app_keypair: Option<Keypair>,
-; 	        config_path: Option<&Path>,
-; 	        bootstrap_config: Option<BootstrapConfig>,
-;
-; 	Result<()> 
 	impl: [
 		"impl " copy st-name some letter " " blk (
 			print st-name
@@ -165,41 +156,45 @@ structure: make map! compose [
 
 set [lib-code lib-dir] read-mod-code rejoin [dirize api-root  %src/lib.rs]
 scan-mod lib-code lib-dir
-probe structure
+; probe structure
 
 
 replace-args: func [
 	body [string!]
-	args [string!]
+	args [block!]
 	vars [map!]
 	/local n s
 ] [
-	foreach [n s] load args [
+	foreach [n s] args [
 		replace/all/case  body  s  vars/(to word! n)
 	]
 ]
 
 template-generate: function [
 	tpl [string!]
-	template-fragment [string!]
+	frag-name [string!]
 	delimiters [block!]
 	vars [map!]
 ] [
-	rule: reduce [to set-word! 'beginning rejoin [delimiters/1 "bg:" template-fragment " "]]
-	append rule compose [copy args ["[" thru "]"] (delimiters/2)
+	fragment: compose [beginning: (rejoin [delimiters/1 "bg:" frag-name " "])]
+	append fragment compose [
+		copy args ["[" thru "]"] (delimiters/2)
 
 		copy body
 
-		to ]
-	append/dup  rule  rejoin [delimiters/1 "bg-end:" template-fragment delimiters/2]  2
-	append rule [
+		to
+	]
+	append/dup  fragment  rejoin [
+		delimiters/1 "bg-end:" frag-name delimiters/2
+	]  2
+	append fragment [
 		(
-			replace-args body args vars
+			replace-args  body  load args  vars
 		)
 		insert beginning body
 	]
-	rule: compose/only [any thru (rule)]
-	parse tpl rule
+
+	parse tpl [any thru fragment]
 ]
 
 clean-tpl: function [
@@ -207,12 +202,12 @@ clean-tpl: function [
 	delimiters [block!]
 ] [
 	while [
-		start: find tpl rejoin [delimiters/1 "bg:"]
+		start: find tpl start-prefix: rejoin [delimiters/1 "bg:"]
 	] [
-		tpl: at start length? rejoin [delimiters/1 "bg:"]
+		tpl: at  start  1 + length? start-prefix
 		
 		name: copy/part  tpl  tpl: find tpl " "
-		end: find/tail tpl rejoin ["bg-end" name delimiters/2]
+		end: find/tail tpl rejoin [delimiters/1 "bg-end:" name delimiters/2]
 		
 		tpl: remove/part start end
 	]
@@ -305,6 +300,19 @@ generate-red: function [
 				vars/FIELDNAME: field-name
 				vars/FIELDNAME_DASH: replace to string! field-name #"_" #"-"
 				template-generate  tpl  rejoin [vars/NAME "_FIELD_STRING"]  delimiters  vars
+			]
+
+			foreach method-name sort keys-of struct/methods [
+				method: struct/methods/(method-name)
+				vars/METHODNAME: method-name
+				template-generate  tpl  rejoin [vars/NAME "_METHOD"]  delimiters  vars
+				
+				params: method/params
+				foreach param-name keys-of params [
+					vars/PARAMNAME: param-name
+					vars/PARAMTYPE: params/(param-name)
+					template-generate  tpl  rejoin [vars/NAME "_" vars/METHODNAME "_PARAM"]  delimiters  vars
+				]
 			]
 		]
 	]
