@@ -2,15 +2,53 @@ Red [
 	Name: {FFI interface and Red bindings generator for Safe Network}
 ]
 
-api-root: %../github/safe_network_archived/sn_api
+api-root: %../github/safe_network/sn_client
 output: %output
 
 
 letter: charset [#"A" - #"Z" #"a" - #"z" #"_"]
-not-blk-delim: charset [not #"}" #"{"]
-blk: [any not-blk-delim ["{" copy inside any blk "}" | ""]]
+blk-chars: charset [not #"}" #"{"]
+blk: [any blk-chars ["{" copy inside any blk "}" | ""]]
 
-string-types: ["String" | "XorUrlBase" | "XorUrl"]
+paren-chars: charset [not #")" #"("]
+paramtype-chars: charset [not #")" #"(" #","]
+paren-content: [any [[some paren-chars] | [#"(" paren-content #")"]]]
+paren: [#"(" copy inside paren-content #")"]
+paramtype: [some [some paramtype-chars | paren]]
+
+blacklist: [			;-- blacklist. specify entire objects or specific methods:
+						;-- "BlacklistedObject"
+						;-- "OtherObject" ["blacklisted_method_1" "blacklisted_method_2"]
+	"WalletClient" [
+		"pay_for_records"
+		"pay_for_storage"
+		"send"
+	]
+	"Client" [
+		"get_spend_from_network"
+		"verify"
+	]
+	"Files" [
+		"get_local_payment_and_upload_chunk"
+	]
+]
+blacklisted?: function [
+	obj [string!]
+	method [string!]
+] [
+	return to-logic any [
+		all [
+			o: find blacklist obj
+			not block? first m: next o
+		]
+		all [
+			block? m
+			find first m method
+		]
+	]
+]
+string-types: ["String" "XorUrlBase" "XorUrl"]
+ref-types: ["Client"]
 
 
 clean: function [code [string!]] [
@@ -41,7 +79,7 @@ read-mod-code: function [
 	reduce [code code-dir]
 ]
 
-mod-path: copy [sn_api]
+mod-path: reduce [copy next find/last api-root #"/"]
 
 scan-mod: function [
 	code [string!]
@@ -53,7 +91,7 @@ scan-mod: function [
 	]
 
 	pub-struct: [
-		"pub struct " copy name some letter " " blk (
+		"pub struct " copy name some letter (
 			st-name: name
 			struct: make map! compose/only [
 				empty?: true
@@ -61,6 +99,11 @@ scan-mod: function [
 				string-fields: (make map! [])
 				methods: (make map! [])
 			]
+
+			structure/pub-structs/(to word! st-name): struct
+		) [
+
+		[" " blk (
 			parse inside [any [thru string-field (
 				if find string-types type [
 					struct/string-fields/(to word! name): type
@@ -68,19 +111,22 @@ scan-mod: function [
 				]
 			)]]
 
-			structure/pub-structs/(to word! st-name): struct
-		)
+		)] | [paren]
+
+		]
 	]
 
 	impl-default: [
 		"impl Default for " copy name some letter " {" (
-			structure/pub-structs/(to word! name)/default?: true
+			unless none? structure/pub-structs/(to word! name) [
+				structure/pub-structs/(to word! name)/default?: true
+			]
 		)
 	]
 	
 	param: [
 		[[["&mut self" | "&self"] (method/self: true)]
-			| [copy param-name some letter ": " copy param-type to ["," | end] (method/params/(to word! param-name): param-type)]
+			| [copy param-name some letter ": " copy param-type paramtype (method/params/(to word! param-name): param-type)]
 		]
 		["," | end]
 	]
@@ -92,24 +138,25 @@ scan-mod: function [
 			parse inside [
 				any thru [
 					"pub async fn " copy fn-name some letter
-					"(" copy fn-params to ")" ")"
+					paren (fn-params: inside)
 					" -> " copy fn-return to " {"
 					(
-						method: make map! compose [
-							params: (make map! [])
-							return: (fn-return)
-							self: (false)
+						unless blacklisted? st-name fn-name [
+							method: make map! compose [
+								params: (make map! [])
+								return: (fn-return)
+								self: (false)
+							]
+							parse fn-params params
+							structure/pub-structs/(to word! st-name)/methods/(to word! fn-name): method
+							structure/pub-structs/(to word! st-name)/empty?: false
 						]
-						parse fn-params params
-						structure/pub-structs/(to word! st-name)/methods/(to word! fn-name): method
-						structure/pub-structs/(to word! st-name)/empty?: false
 					)
 				]
 			]
 			
 		)
 	]
-
 	parse code [
 		any thru [pub-struct | impl-default | impl] thru newline
 	]
@@ -216,8 +263,8 @@ clean-tpl: function [
 
 generate-rust: function [
 	tpl [string!]
+	delimiters [block!]
 ] [
-	delimiters: ["/*" "*/"]
 	vars: make map! []
 
 	foreach struct-name sort keys-of structure/pub-structs [
@@ -261,15 +308,26 @@ generate-rust: function [
 						param-num > 0
 						method/self
 					] [", "] [""]
-					either all [
-						#"&" = first vars/PARAMTYPE
-						"&str" <> vars/PARAMTYPE
-						"&[u8]" <> vars/PARAMTYPE
-					] [
-						vars/BORROW: "&"
-						vars/PARAMTYPE = remove vars/PARAMTYPE
-					] [
-						vars/BORROW: ""
+					case [
+						all [
+							#"&" = first vars/PARAMTYPE
+							"&str" <> vars/PARAMTYPE
+							"&[u8]" <> vars/PARAMTYPE
+							not find ref-types vars/PARAMTYPE
+						] [
+							vars/BORROW: "&"
+							vars/PARAMTYPE: next vars/PARAMTYPE
+						]
+
+						find ref-types vars/PARAMTYPE [
+							vars/BORROW: "std::ptr::read("
+							vars/PARAMTYPE: "usize"
+							vars/PARAMNUM: rejoin [param-num " as *const " params/(param-name) ")"]
+						]
+
+						'else [
+							vars/BORROW: ""
+						]
 					]
 					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_PARAM"] delimiters vars
 					param-num: param-num + 1
@@ -282,8 +340,8 @@ generate-rust: function [
 
 generate-red: function [
 	tpl [string!]
+	delimiters [block!]
 ] [
-	delimiters: ["comment {" "}"]
 	vars: make map! []
 
 	foreach struct-name sort keys-of structure/pub-structs [
@@ -323,10 +381,13 @@ generate-red: function [
 parse-template: function [
 	tpl-path [file!]
 	generator [function!]
+	delimiters [block!]
 ] [
 	tpl: read tpl-path
 
-	generator tpl
+	template-generate tpl "TPL_COMMENT" delimiters make map! reduce ['TEMPLATE_FILE tpl-path]
+
+	generator tpl delimiters
 
 	destination: rejoin [
 		output
@@ -351,6 +412,6 @@ copy-file: function [
 ]
 
 
-parse-template %sn_ffi/src/lib.tpl.rs :generate-rust
-parse-template %sn-ffi.tpl.red :generate-red
+parse-template %sn_ffi/src/lib.tpl.rs :generate-rust ["/*" "*/"]
+parse-template %sn-ffi.tpl.red :generate-red ["comment {" "}"]
 copy-file %sn_ffi/Cargo.toml

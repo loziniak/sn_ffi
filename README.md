@@ -9,7 +9,7 @@ Safe Network *sn_api* bindings for Red language (32-bit).
 git clone git@github.com:loziniak/sn_ffi.git
 
 # generate sources
-red bindgen.red
+./red-08may23-652d66a4f bindgen.red
 
 # rust 32-bit lib
 cd output/sn_ffi
