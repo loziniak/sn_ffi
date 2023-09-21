@@ -10,6 +10,7 @@ bls = { package = "blsttc", version = "8.0.1" }
 bytes = "1.0.1"
 libp2p = { version="0.52", features = ["identify"] }
 tokio = "1.17.0"
+serde = "1.0.130"
 sn_dbc = { version = "19.1.1", features = ["serdes"] }
 xor_name = "5.0.0"
 sn_client = { path = "../../../github/safe_network/sn_client" }

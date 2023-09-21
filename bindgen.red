@@ -23,13 +23,18 @@ blacklist: [			;-- blacklist. specify entire objects or specific methods:
 		"pay_for_records"
 		"pay_for_storage"
 		"send"
+		"get_store_cost_at_address"
 	]
 	"Client" [
 		"get_spend_from_network"
 		"verify"
+		"send_without_verify"
+		"send"
+		"get_store_costs_at_address"
 	]
 	"Files" [
 		"get_local_payment_and_upload_chunk"
+		"upload_with_payments"
 	]
 ]
 blacklisted?: function [
@@ -48,7 +53,7 @@ blacklisted?: function [
 	]
 ]
 string-types: ["String" "XorUrlBase" "XorUrl"]
-ref-types: ["Client"]
+ref-types: ["Client" "ClientRegister" "OwnedSemaphorePermit" "WalletClient"]
 
 
 clean: function [code [string!]] [
@@ -142,6 +147,8 @@ scan-mod: function [
 					" -> " copy fn-return to " {"
 					(
 						unless blacklisted? st-name fn-name [
+							insert back tail fn-return ", Error"
+							replace fn-return "Self" st-name
 							method: make map! compose [
 								params: (make map! [])
 								return: (fn-return)
@@ -261,6 +268,14 @@ clean-tpl: function [
 ]
 
 
+result-value: function [
+	return-result [string!]
+	return: [string!]
+] [
+	parse return-result ["Result<" copy value to ", Error>" thru end]
+	value
+]
+
 generate-rust: function [
 	tpl [string!]
 	delimiters [block!]
@@ -293,40 +308,46 @@ generate-rust: function [
 			foreach method-name sort keys-of struct/methods [
 				method: struct/methods/(method-name)
 				vars/METHODNAME: method-name
+				vars/RETURN: method/return
 				template-generate tpl "METHOD" delimiters vars
 
 				if method/self [
 					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_SELF"] delimiters vars
+				]
+				if find ref-types result-value method/return [
+					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_RETURN_REF"] delimiters vars
 				]
 				params: method/params
 				param-num: 0
 				foreach param-name keys-of params [
 					vars/PARAMNAME: param-name
 					vars/PARAMTYPE: params/(param-name)
+					param-type: params/(param-name)
 					vars/PARAMNUM: param-num
 					vars/COMMA: either any [
 						param-num > 0
 						method/self
-					] [", "] [""]
+					] [", "] [copy ""]
+					borrow: copy "";
 					case [
 						all [
-							#"&" = first vars/PARAMTYPE
+							parse vars/PARAMTYPE [copy borrow ["&" opt "mut "] copy param-type to end]
 							"&str" <> vars/PARAMTYPE
 							"&[u8]" <> vars/PARAMTYPE
-							not find ref-types vars/PARAMTYPE
+							not find ref-types param-type
 						] [
-							vars/BORROW: "&"
-							vars/PARAMTYPE: next vars/PARAMTYPE
+							vars/BORROW: borrow
+							vars/PARAMTYPE: param-type
 						]
 
-						find ref-types vars/PARAMTYPE [
-							vars/BORROW: "std::ptr::read("
+						find ref-types param-type [
+							vars/BORROW: rejoin [borrow "std::ptr::read("]
 							vars/PARAMTYPE: "usize"
-							vars/PARAMNUM: rejoin [param-num " as *const " params/(param-name) ")"]
+							vars/PARAMNUM: rejoin [param-num " as *const " param-type ")"]
 						]
 
 						'else [
-							vars/BORROW: ""
+							vars/BORROW: copy ""
 						]
 					]
 					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_PARAM"] delimiters vars
