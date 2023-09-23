@@ -49,7 +49,42 @@ Red [
 				params_size [integer!]
 			]
 	
+			c_client_get_spend_from_network: "_client_get_spend_from_network" [
+				rt [handle!]
+				ref [handle!]
+				params [byte-ptr!]
+				params_size [integer!]
+			]
+	
+			c_client_get_store_costs_at_address: "_client_get_store_costs_at_address" [
+				rt [handle!]
+				ref [handle!]
+				params [byte-ptr!]
+				params_size [integer!]
+			]
+	
 			c_client_new: "_client_new" [
+				rt [handle!]
+				ref [handle!]
+				params [byte-ptr!]
+				params_size [integer!]
+			]
+	
+			c_client_send: "_client_send" [
+				rt [handle!]
+				ref [handle!]
+				params [byte-ptr!]
+				params_size [integer!]
+			]
+	
+			c_client_send_without_verify: "_client_send_without_verify" [
+				rt [handle!]
+				ref [handle!]
+				params [byte-ptr!]
+				params_size [integer!]
+			]
+	
+			c_client_verify: "_client_verify" [
 				rt [handle!]
 				ref [handle!]
 				params [byte-ptr!]
@@ -151,6 +186,35 @@ Red [
 			]
 	
 			c_files_read_from: "_files_read_from" [
+				rt [handle!]
+				ref [handle!]
+				params [byte-ptr!]
+				params_size [integer!]
+			]
+	
+			c_files_upload_with_payments: "_files_upload_with_payments" [
+				rt [handle!]
+				ref [handle!]
+				params [byte-ptr!]
+				params_size [integer!]
+			]
+	
+
+
+
+	
+
+	
+
+	
+			c_walletclient_get_store_cost_at_address: "_walletclient_get_store_cost_at_address" [
+				rt [handle!]
+				ref [handle!]
+				params [byte-ptr!]
+				params_size [integer!]
+			]
+	
+			c_walletclient_send: "_walletclient_send" [
 				rt [handle!]
 				ref [handle!]
 				params [byte-ptr!]
@@ -332,6 +396,64 @@ r_client_get_signed_register_from_network: routine [
 ]
 
 
+client_get_spend_from_network: function [
+	ref [handle!]
+    unique_pubkey			;; in rust: &UniquePubkey
+    
+] [
+	params: to binary! ""
+	save/as
+		params
+		reduce [ unique_pubkey ]
+		'redbin
+
+	probe length? params
+	r_client_get_spend_from_network
+		ref
+		probe params
+]
+
+r_client_get_spend_from_network: routine [
+	ref [handle!]
+	params [binary!]
+] [
+	c_client_get_spend_from_network
+		tokio_runtime
+		as handle! ref/value
+		binary/rs-head params
+		binary/rs-length? params
+]
+
+
+client_get_store_costs_at_address: function [
+	ref [handle!]
+    address			;; in rust: &NetworkAddress
+    
+] [
+	params: to binary! ""
+	save/as
+		params
+		reduce [ address ]
+		'redbin
+
+	probe length? params
+	r_client_get_store_costs_at_address
+		ref
+		probe params
+]
+
+r_client_get_store_costs_at_address: routine [
+	ref [handle!]
+	params [binary!]
+] [
+	c_client_get_store_costs_at_address
+		tokio_runtime
+		as handle! ref/value
+		binary/rs-head params
+		binary/rs-length? params
+]
+
+
 client_new: function [
 	ref [handle!]
     signer			;; in rust: SecretKey
@@ -357,6 +479,94 @@ r_client_new: routine [
 	params [binary!]
 ] [
 	c_client_new
+		tokio_runtime
+		as handle! ref/value
+		binary/rs-head params
+		binary/rs-length? params
+]
+
+
+client_send: function [
+	ref [handle!]
+    spend_requests			;; in rust: &BTreeSet<SpendRequest>
+    verify_store			;; in rust: bool
+    
+] [
+	params: to binary! ""
+	save/as
+		params
+		reduce [ spend_requests  verify_store ]
+		'redbin
+
+	probe length? params
+	r_client_send
+		ref
+		probe params
+]
+
+r_client_send: routine [
+	ref [handle!]
+	params [binary!]
+] [
+	c_client_send
+		tokio_runtime
+		as handle! ref/value
+		binary/rs-head params
+		binary/rs-length? params
+]
+
+
+client_send_without_verify: function [
+	ref [handle!]
+    transfer			;; in rust: TransferOutputs
+    
+] [
+	params: to binary! ""
+	save/as
+		params
+		reduce [ transfer ]
+		'redbin
+
+	probe length? params
+	r_client_send_without_verify
+		ref
+		probe params
+]
+
+r_client_send_without_verify: routine [
+	ref [handle!]
+	params [binary!]
+] [
+	c_client_send_without_verify
+		tokio_runtime
+		as handle! ref/value
+		binary/rs-head params
+		binary/rs-length? params
+]
+
+
+client_verify: function [
+	ref [handle!]
+    cash_note			;; in rust: &CashNote
+    
+] [
+	params: to binary! ""
+	save/as
+		params
+		reduce [ cash_note ]
+		'redbin
+
+	probe length? params
+	r_client_verify
+		ref
+		probe params
+]
+
+r_client_verify: routine [
+	ref [handle!]
+	params [binary!]
+] [
+	c_client_verify
 		tokio_runtime
 		as handle! ref/value
 		binary/rs-head params
@@ -724,6 +934,105 @@ r_files_read_from: routine [
 ]
 
 
+files_upload_with_payments: function [
+	ref [handle!]
+    bytes			;; in rust: Bytes
+    verify_store			;; in rust: bool
+    
+] [
+	params: to binary! ""
+	save/as
+		params
+		reduce [ bytes  verify_store ]
+		'redbin
+
+	probe length? params
+	r_files_upload_with_payments
+		ref
+		probe params
+]
+
+r_files_upload_with_payments: routine [
+	ref [handle!]
+	params [binary!]
+] [
+	c_files_upload_with_payments
+		tokio_runtime
+		as handle! ref/value
+		binary/rs-head params
+		binary/rs-length? params
+]
+
+
+
+
+
+
+
+
+
+
+
+walletclient_get_store_cost_at_address: function [
+	ref [handle!]
+    address			;; in rust: &NetworkAddress
+    
+] [
+	params: to binary! ""
+	save/as
+		params
+		reduce [ address ]
+		'redbin
+
+	probe length? params
+	r_walletclient_get_store_cost_at_address
+		ref
+		probe params
+]
+
+r_walletclient_get_store_cost_at_address: routine [
+	ref [handle!]
+	params [binary!]
+] [
+	c_walletclient_get_store_cost_at_address
+		tokio_runtime
+		as handle! ref/value
+		binary/rs-head params
+		binary/rs-length? params
+]
+
+
+walletclient_send: function [
+	ref [handle!]
+    amount			;; in rust: NanoTokens
+    to			;; in rust: MainPubkey
+    verify_store			;; in rust: bool
+    
+] [
+	params: to binary! ""
+	save/as
+		params
+		reduce [ amount  to  verify_store ]
+		'redbin
+
+	probe length? params
+	r_walletclient_send
+		ref
+		probe params
+]
+
+r_walletclient_send: routine [
+	ref [handle!]
+	params [binary!]
+] [
+	c_walletclient_send
+		tokio_runtime
+		as handle! ref/value
+		binary/rs-head params
+		binary/rs-length? params
+]
+
+
 
 
 
@@ -767,6 +1076,14 @@ clientregister!: object [
 ]
 
 files!: object [
+	ref: none
+
+	
+
+	
+]
+
+walletclient!: object [
 	ref: none
 
 	

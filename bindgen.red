@@ -20,21 +20,11 @@ blacklist: [			;-- blacklist. specify entire objects or specific methods:
 						;-- "BlacklistedObject"
 						;-- "OtherObject" ["blacklisted_method_1" "blacklisted_method_2"]
 	"WalletClient" [
-		"pay_for_records"
-		"pay_for_storage"
-		"send"
-		"get_store_cost_at_address"
-	]
-	"Client" [
-		"get_spend_from_network"
-		"verify"
-		"send_without_verify"
-		"send"
-		"get_store_costs_at_address"
+		"pay_for_records"			; param: BTreeMap<XorName
+		"pay_for_storage"			; param: impl Iterator<Item = NetworkAddress>
 	]
 	"Files" [
-		"get_local_payment_and_upload_chunk"
-		"upload_with_payments"
+		"get_local_payment_and_upload_chunk"	; param: Option<OwnedSemaphorePermit>
 	]
 ]
 blacklisted?: function [
@@ -53,7 +43,7 @@ blacklisted?: function [
 	]
 ]
 string-types: ["String" "XorUrlBase" "XorUrl"]
-ref-types: ["Client" "ClientRegister" "OwnedSemaphorePermit" "WalletClient"]
+ref-types: ["OwnedSemaphorePermit"]
 
 
 clean: function [code [string!]] [
@@ -281,6 +271,12 @@ generate-rust: function [
 	delimiters [block!]
 ] [
 	vars: make map! []
+
+	foreach struct-name keys-of structure/pub-structs [
+		unless structure/pub-structs/(struct-name)/empty? [
+			append ref-types to-string struct-name
+		]
+	]
 
 	foreach struct-name sort keys-of structure/pub-structs [
 		struct: structure/pub-structs/(struct-name)
