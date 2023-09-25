@@ -32,11 +32,11 @@ blacklisted?: function [
 	method [string!]
 ] [
 	return to-logic any [
-		all [
+		all [						;-- blacklist entire struct
 			o: find blacklist obj
 			not block? first m: next o
 		]
-		all [
+		all [						;-- blacklist by method
 			block? m
 			find first m method
 		]
@@ -380,7 +380,11 @@ generate-red: function [
 			foreach method-name sort keys-of struct/methods [
 				method: struct/methods/(method-name)
 				vars/METHODNAME: method-name
+
 				template-generate  tpl  rejoin [vars/NAME "_METHOD"]  delimiters  vars
+				if method/self [
+					template-generate  tpl  probe rejoin [vars/NAME "_" vars/METHODNAME "_SELF"]  delimiters  vars
+				]
 				
 				params: method/params
 				foreach param-name keys-of params [

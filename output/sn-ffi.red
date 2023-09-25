@@ -16,77 +16,77 @@ Red [
 	
 			c_client_create_register: "_client_create_register" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_get_chunk: "_client_get_chunk" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_get_network_concurrency_permit: "_client_get_network_concurrency_permit" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_get_register: "_client_get_register" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_get_signed_register_from_network: "_client_get_signed_register_from_network" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_get_spend_from_network: "_client_get_spend_from_network" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_get_store_costs_at_address: "_client_get_store_costs_at_address" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_new: "_client_new" [
 				rt [handle!]
-				ref [handle!]
+				
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_send: "_client_send" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_send_without_verify: "_client_send_without_verify" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_client_verify: "_client_verify" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
@@ -101,7 +101,7 @@ Red [
 	
 			c_clienteventsreceiver_recv: "_clienteventsreceiver_recv" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
@@ -116,49 +116,49 @@ Red [
 	
 			c_clientregister_create_online: "_clientregister_create_online" [
 				rt [handle!]
-				ref [handle!]
+				
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_clientregister_create_public_online: "_clientregister_create_public_online" [
 				rt [handle!]
-				ref [handle!]
+				
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_clientregister_push: "_clientregister_push" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_clientregister_sync: "_clientregister_sync" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_clientregister_write_atop_online: "_clientregister_write_atop_online" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_clientregister_write_merging_branches_online: "_clientregister_write_merging_branches_online" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_clientregister_write_online: "_clientregister_write_online" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
@@ -173,28 +173,28 @@ Red [
 	
 			c_files_pay_for_chunks: "_files_pay_for_chunks" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_files_read_bytes: "_files_read_bytes" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_files_read_from: "_files_read_from" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_files_upload_with_payments: "_files_upload_with_payments" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
@@ -209,14 +209,14 @@ Red [
 	
 			c_walletclient_get_store_cost_at_address: "_walletclient_get_store_cost_at_address" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
 	
 			c_walletclient_send: "_walletclient_send" [
 				rt [handle!]
-				ref [handle!]
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 			]
@@ -251,7 +251,7 @@ Red [
 
 
 client_create_register: function [
-	ref [handle!]
+	 ref [handle!] 
     meta			;; in rust: XorName
     wallet_client			;; in rust: &mut WalletClient
     verify_store			;; in rust: bool
@@ -265,24 +265,24 @@ client_create_register: function [
 
 	probe length? params
 	r_client_create_register
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_create_register: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_create_register
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_get_chunk: function [
-	ref [handle!]
+	 ref [handle!] 
     address			;; in rust: ChunkAddress
     
 ] [
@@ -294,24 +294,24 @@ client_get_chunk: function [
 
 	probe length? params
 	r_client_get_chunk
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_get_chunk: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_get_chunk
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_get_network_concurrency_permit: function [
-	ref [handle!]
+	 ref [handle!] 
     
 ] [
 	params: to binary! ""
@@ -322,24 +322,24 @@ client_get_network_concurrency_permit: function [
 
 	probe length? params
 	r_client_get_network_concurrency_permit
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_get_network_concurrency_permit: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_get_network_concurrency_permit
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_get_register: function [
-	ref [handle!]
+	 ref [handle!] 
     address			;; in rust: RegisterAddress
     
 ] [
@@ -351,24 +351,24 @@ client_get_register: function [
 
 	probe length? params
 	r_client_get_register
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_get_register: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_get_register
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_get_signed_register_from_network: function [
-	ref [handle!]
+	 ref [handle!] 
     address			;; in rust: RegisterAddress
     
 ] [
@@ -380,24 +380,24 @@ client_get_signed_register_from_network: function [
 
 	probe length? params
 	r_client_get_signed_register_from_network
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_get_signed_register_from_network: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_get_signed_register_from_network
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_get_spend_from_network: function [
-	ref [handle!]
+	 ref [handle!] 
     unique_pubkey			;; in rust: &UniquePubkey
     
 ] [
@@ -409,24 +409,24 @@ client_get_spend_from_network: function [
 
 	probe length? params
 	r_client_get_spend_from_network
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_get_spend_from_network: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_get_spend_from_network
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_get_store_costs_at_address: function [
-	ref [handle!]
+	 ref [handle!] 
     address			;; in rust: &NetworkAddress
     
 ] [
@@ -438,24 +438,24 @@ client_get_store_costs_at_address: function [
 
 	probe length? params
 	r_client_get_store_costs_at_address
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_get_store_costs_at_address: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_get_store_costs_at_address
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_new: function [
-	ref [handle!]
+	
     signer			;; in rust: SecretKey
     peers			;; in rust: Option<Vec<Multiaddr>>
     req_response_timeout			;; in rust: Option<Duration>
@@ -470,24 +470,24 @@ client_new: function [
 
 	probe length? params
 	r_client_new
-		ref
+		
 		probe params
 ]
 
 r_client_new: routine [
-	ref [handle!]
+	
 	params [binary!]
 ] [
 	c_client_new
 		tokio_runtime
-		as handle! ref/value
+		
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_send: function [
-	ref [handle!]
+	 ref [handle!] 
     spend_requests			;; in rust: &BTreeSet<SpendRequest>
     verify_store			;; in rust: bool
     
@@ -500,24 +500,24 @@ client_send: function [
 
 	probe length? params
 	r_client_send
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_send: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_send
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_send_without_verify: function [
-	ref [handle!]
+	 ref [handle!] 
     transfer			;; in rust: TransferOutputs
     
 ] [
@@ -529,24 +529,24 @@ client_send_without_verify: function [
 
 	probe length? params
 	r_client_send_without_verify
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_send_without_verify: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_send_without_verify
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 client_verify: function [
-	ref [handle!]
+	 ref [handle!] 
     cash_note			;; in rust: &CashNote
     
 ] [
@@ -558,17 +558,17 @@ client_verify: function [
 
 	probe length? params
 	r_client_verify
-		ref
+		 ref 
 		probe params
 ]
 
 r_client_verify: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_client_verify
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
@@ -584,7 +584,7 @@ r_client_verify: routine [
 
 
 clienteventsreceiver_recv: function [
-	ref [handle!]
+	 ref [handle!] 
     
 ] [
 	params: to binary! ""
@@ -595,17 +595,17 @@ clienteventsreceiver_recv: function [
 
 	probe length? params
 	r_clienteventsreceiver_recv
-		ref
+		 ref 
 		probe params
 ]
 
 r_clienteventsreceiver_recv: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_clienteventsreceiver_recv
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
@@ -621,7 +621,7 @@ r_clienteventsreceiver_recv: routine [
 
 
 clientregister_create_online: function [
-	ref [handle!]
+	
     client			;; in rust: Client
     meta			;; in rust: XorName
     wallet_client			;; in rust: &mut WalletClient
@@ -636,24 +636,24 @@ clientregister_create_online: function [
 
 	probe length? params
 	r_clientregister_create_online
-		ref
+		
 		probe params
 ]
 
 r_clientregister_create_online: routine [
-	ref [handle!]
+	
 	params [binary!]
 ] [
 	c_clientregister_create_online
 		tokio_runtime
-		as handle! ref/value
+		
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 clientregister_create_public_online: function [
-	ref [handle!]
+	
     client			;; in rust: Client
     meta			;; in rust: XorName
     wallet_client			;; in rust: &mut WalletClient
@@ -668,24 +668,24 @@ clientregister_create_public_online: function [
 
 	probe length? params
 	r_clientregister_create_public_online
-		ref
+		
 		probe params
 ]
 
 r_clientregister_create_public_online: routine [
-	ref [handle!]
+	
 	params [binary!]
 ] [
 	c_clientregister_create_public_online
 		tokio_runtime
-		as handle! ref/value
+		
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 clientregister_push: function [
-	ref [handle!]
+	 ref [handle!] 
     verify_store			;; in rust: bool
     
 ] [
@@ -697,24 +697,24 @@ clientregister_push: function [
 
 	probe length? params
 	r_clientregister_push
-		ref
+		 ref 
 		probe params
 ]
 
 r_clientregister_push: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_clientregister_push
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 clientregister_sync: function [
-	ref [handle!]
+	 ref [handle!] 
     wallet_client			;; in rust: &mut WalletClient
     verify_store			;; in rust: bool
     
@@ -727,24 +727,24 @@ clientregister_sync: function [
 
 	probe length? params
 	r_clientregister_sync
-		ref
+		 ref 
 		probe params
 ]
 
 r_clientregister_sync: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_clientregister_sync
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 clientregister_write_atop_online: function [
-	ref [handle!]
+	 ref [handle!] 
     entry			;; in rust: &[u8]
     children			;; in rust: BTreeSet<EntryHash>
     verify_store			;; in rust: bool
@@ -758,24 +758,24 @@ clientregister_write_atop_online: function [
 
 	probe length? params
 	r_clientregister_write_atop_online
-		ref
+		 ref 
 		probe params
 ]
 
 r_clientregister_write_atop_online: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_clientregister_write_atop_online
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 clientregister_write_merging_branches_online: function [
-	ref [handle!]
+	 ref [handle!] 
     entry			;; in rust: &[u8]
     verify_store			;; in rust: bool
     
@@ -788,24 +788,24 @@ clientregister_write_merging_branches_online: function [
 
 	probe length? params
 	r_clientregister_write_merging_branches_online
-		ref
+		 ref 
 		probe params
 ]
 
 r_clientregister_write_merging_branches_online: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_clientregister_write_merging_branches_online
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 clientregister_write_online: function [
-	ref [handle!]
+	 ref [handle!] 
     entry			;; in rust: &[u8]
     verify_store			;; in rust: bool
     
@@ -818,17 +818,17 @@ clientregister_write_online: function [
 
 	probe length? params
 	r_clientregister_write_online
-		ref
+		 ref 
 		probe params
 ]
 
 r_clientregister_write_online: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_clientregister_write_online
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
@@ -844,7 +844,7 @@ r_clientregister_write_online: routine [
 
 
 files_pay_for_chunks: function [
-	ref [handle!]
+	 ref [handle!] 
     chunks			;; in rust: Vec<XorName>
     verify_store			;; in rust: bool
     
@@ -857,24 +857,24 @@ files_pay_for_chunks: function [
 
 	probe length? params
 	r_files_pay_for_chunks
-		ref
+		 ref 
 		probe params
 ]
 
 r_files_pay_for_chunks: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_files_pay_for_chunks
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 files_read_bytes: function [
-	ref [handle!]
+	 ref [handle!] 
     address			;; in rust: ChunkAddress
     downloaded_file_path			;; in rust: Option<PathBuf>
     
@@ -887,24 +887,24 @@ files_read_bytes: function [
 
 	probe length? params
 	r_files_read_bytes
-		ref
+		 ref 
 		probe params
 ]
 
 r_files_read_bytes: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_files_read_bytes
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 files_read_from: function [
-	ref [handle!]
+	 ref [handle!] 
     address			;; in rust: ChunkAddress
     position			;; in rust: usize
     length			;; in rust: usize
@@ -918,24 +918,24 @@ files_read_from: function [
 
 	probe length? params
 	r_files_read_from
-		ref
+		 ref 
 		probe params
 ]
 
 r_files_read_from: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_files_read_from
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 files_upload_with_payments: function [
-	ref [handle!]
+	 ref [handle!] 
     bytes			;; in rust: Bytes
     verify_store			;; in rust: bool
     
@@ -948,17 +948,17 @@ files_upload_with_payments: function [
 
 	probe length? params
 	r_files_upload_with_payments
-		ref
+		 ref 
 		probe params
 ]
 
 r_files_upload_with_payments: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_files_upload_with_payments
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
@@ -974,7 +974,7 @@ r_files_upload_with_payments: routine [
 
 
 walletclient_get_store_cost_at_address: function [
-	ref [handle!]
+	 ref [handle!] 
     address			;; in rust: &NetworkAddress
     
 ] [
@@ -986,24 +986,24 @@ walletclient_get_store_cost_at_address: function [
 
 	probe length? params
 	r_walletclient_get_store_cost_at_address
-		ref
+		 ref 
 		probe params
 ]
 
 r_walletclient_get_store_cost_at_address: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_walletclient_get_store_cost_at_address
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
 
 
 walletclient_send: function [
-	ref [handle!]
+	 ref [handle!] 
     amount			;; in rust: NanoTokens
     to			;; in rust: MainPubkey
     verify_store			;; in rust: bool
@@ -1017,17 +1017,17 @@ walletclient_send: function [
 
 	probe length? params
 	r_walletclient_send
-		ref
+		 ref 
 		probe params
 ]
 
 r_walletclient_send: routine [
-	ref [handle!]
+	 ref [handle!] 
 	params [binary!]
 ] [
 	c_walletclient_send
 		tokio_runtime
-		as handle! ref/value
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 ]
@@ -1038,7 +1038,7 @@ r_walletclient_send: routine [
 
 ; hi-level code
 
-bls-key: function [
+to-vec-u8: function [
 	key-bin [binary!]
 	return: [block!]
 ] [
@@ -1108,7 +1108,7 @@ safe!: make safe! [
 		ip [tuple!]
 		port [integer!]
 	] [
-		genesis-key: bls-key #{					
+		genesis-key: to-vec-u8 #{					
 			8640 e62c c44e 75cf
 			4fad c8ee 91b7 4b4c
 			f0fd 2c09 84fb 0e3a
@@ -1132,3 +1132,26 @@ safe!: make safe! [
 			["secs" 10 "nanos" 0] ;timeout
 	]
 ]
+
+
+client!: make client! [
+
+	init: function [] [
+		client_new
+			[				;-- blsttc::SecretKey / blstrs::Scalar / blst::blst_fr (https://docs.rs/blst/0.3.11/blst/struct.blst_fr.html)
+				"l" [
+					#{8640 e62c c44e 75cf}
+					#{4fad c8ee 91b7 4b4c}
+					#{f0fd 2c09 84fb 0e3a}
+					#{b40f 0268 0685 7d8c}
+				]
+			]
+			[				;-- peers
+				"/ip4/139.59.125.187/tcp/35163/p2p/12D3KooWE75czdXUnZJ59gtMDwNZCyBx24whf9WXbNTmEoCaiUrA"
+			]
+			["secs" 10 "nanos" 0] ;-- req_response_timeout
+			none			;-- custom_concurrency_limit
+	]
+
+]
+

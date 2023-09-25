@@ -36,7 +36,7 @@ comment {bg:OBJ [
 	]}
 			c_s-afe_c-onnect: "_s-afe_c-onnect" [
 				rt [handle!]
-				ref [handle!]
+				comment {bg:s-afe_c-onnect_SELF []}ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
 				params [byte-ptr!]
 				params_size [integer!]
 			]
@@ -107,7 +107,7 @@ comment {bg:s-afe_METHOD [
 ]}
 
 s-afe_c-onnect: function [
-	ref [handle!]
+	comment {bg:s-afe_c-onnect_SELF []}ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
     comment {bg:s-afe_c-onnect_PARAM [
         PARAMNAME: "app-keypair"
         PARAMTYPE: "Option<Keypair>"
@@ -122,17 +122,17 @@ s-afe_c-onnect: function [
 
 	probe length? params
 	r_s-afe_c-onnect
-		ref
+		comment {bg:s-afe_c-onnect_SELF []}ref comment {bg-end:s-afe_c-onnect_SELF}
 		probe params
 ]
 
 r_s-afe_c-onnect: routine [
-	ref [handle!]
+	comment {bg:s-afe_c-onnect_SELF []}ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
 	params [binary!]
 ] [
 	c_s-afe_c-onnect
 		tokio_runtime
-		as handle! ref/value
+		comment {bg:s-afe_c-onnect_SELF []}as handle! ref/value comment {bg-end:s-afe_c-onnect_SELF}
 		binary/rs-head params
 		binary/rs-length? params
 ]
@@ -143,7 +143,7 @@ comment {bg-end:OBJ}
 
 ; hi-level code
 
-bls-key: function [
+to-vec-u8: function [
 	key-bin [binary!]
 	return: [block!]
 ] [
@@ -199,7 +199,7 @@ safe!: make safe! [
 		ip [tuple!]
 		port [integer!]
 	] [
-		genesis-key: bls-key #{					
+		genesis-key: to-vec-u8 #{					
 			8640 e62c c44e 75cf
 			4fad c8ee 91b7 4b4c
 			f0fd 2c09 84fb 0e3a
@@ -223,3 +223,26 @@ safe!: make safe! [
 			["secs" 10 "nanos" 0] ;timeout
 	]
 ]
+
+
+client!: make client! [
+
+	init: function [] [
+		client_new
+			[				;-- blsttc::SecretKey / blstrs::Scalar / blst::blst_fr (https://docs.rs/blst/0.3.11/blst/struct.blst_fr.html)
+				"l" [
+					#{8640 e62c c44e 75cf}
+					#{4fad c8ee 91b7 4b4c}
+					#{f0fd 2c09 84fb 0e3a}
+					#{b40f 0268 0685 7d8c}
+				]
+			]
+			[				;-- peers
+				"/ip4/139.59.125.187/tcp/35163/p2p/12D3KooWE75czdXUnZJ59gtMDwNZCyBx24whf9WXbNTmEoCaiUrA"
+			]
+			["secs" 10 "nanos" 0] ;-- req_response_timeout
+			none			;-- custom_concurrency_limit
+	]
+
+]
+
