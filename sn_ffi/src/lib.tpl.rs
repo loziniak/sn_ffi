@@ -4,19 +4,10 @@
 //*** /*bg-end:TPL_COMMENT*/
 
 use std::ffi::{CString, c_char};
-use std::time::Duration;
-use std::collections::BTreeSet;
-use std::path::PathBuf;
-use bytes::Bytes;
 use tokio::runtime::Runtime;
 use bls::SecretKey;
-use libp2p::Multiaddr;
-use xor_name::XorName;
-use sn_registers::{RegisterAddress, EntryHash};
-use sn_protocol::NetworkAddress;
-use sn_protocol::storage::ChunkAddress;
-use sn_transfers::{NanoTokens, MainPubkey, CashNote, UniquePubkey, client_transfers::{TransferOutputs, SpendRequest}};
-use redbin::{de::from_bytes as from_redbin, ser::to_bytes as to_redbin};
+use libp2p::PeerId;
+use redbin::{from_bytes as from_redbin, to_bytes as to_redbin};
 use serde::Serialize;
 
 /*bg:API_IMPORT [MOD:"sn_api::" NAME: "Safe"]*/
@@ -78,11 +69,16 @@ pub extern "C" fn s_afe_xorurl_base(ptr: *const Safe) -> *mut c_char {
     RETURN: "Result<(), Error>"
 ]*/
 #[no_mangle]
-pub extern "C" fn s_afe_connect(rt_ptr: *mut Runtime, /*bg:s_afe_connect_SELF []*/s_afe_ptr: *mut Safe, /*bg-end:s_afe_connect_SELF*/params: *const u8, params_size: usize) -> Buffer {
+pub extern "C" fn s_afe_connect(
+	/*bg:s_afe_connect_ASYNC []*/rt_ptr: *mut Runtime,/*bg-end:s_afe_connect_ASYNC*/
+	/*bg:s_afe_connect_SELF []*/s_afe_ptr: *mut Safe,/*bg-end:s_afe_connect_SELF*/
+	params: *const u8,
+	params_size: usize,
+) -> Buffer {
     println!("s_afe_connect pointer: {:?}, size: {:?}", params, params_size);
 
+    /*bg:s_afe_connect_ASYNC []*/assert!(!rt_ptr.is_null());/*bg-end:s_afe_connect_ASYNC*/
     /*bg:s_afe_connect_SELF []*/assert!(!s_afe_ptr.is_null());/*bg-end:s_afe_connect_SELF*/
-    assert!(!rt_ptr.is_null());
     
     let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
     println!("s_afe_connect u8: {:?}", params);
@@ -98,8 +94,12 @@ pub extern "C" fn s_afe_connect(rt_ptr: *mut Runtime, /*bg:s_afe_connect_SELF []
 
     let ret = unsafe { // Result<(), Error>
         /*bg:s_afe_connect_SELF []*/let s_afe = &mut *s_afe_ptr;/*bg-end:s_afe_connect_SELF*/
+        /*bg:s_afe_connect_ASYNC []*/
         let rt = &mut *rt_ptr;
-        rt.block_on(Safe::connect(/*bg:s_afe_connect_SELF []*/s_afe/*bg-end:s_afe_connect_SELF*//*bg:s_afe_connect_PARAM [PARAMNUM: "0" COMMA: ", " BORROW: "&"]*/, &params.0/*bg-end:s_afe_connect_PARAM*/))
+        rt.block_on(/*bg-end:s_afe_connect_ASYNC*/
+        	Safe::connect(/*bg:s_afe_connect_SELF []*/s_afe/*bg-end:s_afe_connect_SELF*//*bg:s_afe_connect_PARAM [PARAMNUM: "0" COMMA: ", " BORROW: "&"]*/, &params.0/*bg-end:s_afe_connect_PARAM*/)
+        /*bg:s_afe_connect_ASYNC []*/
+        )/*bg-end:s_afe_connect_ASYNC*/
     };
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
     /*bg:s_afe_connect_RETURN_REF []*/
@@ -115,6 +115,8 @@ pub extern "C" fn s_afe_connect(rt_ptr: *mut Runtime, /*bg:s_afe_connect_SELF []
 
 #[no_mangle]
 pub extern "C" fn init_runtime() -> *mut Runtime {
+	let rt: Runtime = Runtime::new().unwrap();
+//	let rt: Runtime = Builder::new_current_thread().build().unwrap(); // TODO: try with single thread
     Box::into_raw(Box::new(Runtime::new().unwrap()))
 }
 

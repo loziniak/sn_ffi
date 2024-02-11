@@ -3,6 +3,13 @@ Red [
 ]
 
 #system [
+	
+	buffer!: alias struct! [
+		data [byte-ptr!]
+		len [integer!]
+	]
+
+
 	#import [
 
 		"sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
@@ -10,215 +17,24 @@ Red [
 
 
 	
+			c_safe_default: "safe_default" [
+				return: [handle!]
+			]
 
-	
-
-	
-			c_client_create_register: "_client_create_register" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
+			c_safe_free: "safe_free" [
+				ref [handle!]
 			]
-	
-			c_client_get_chunk: "_client_get_chunk" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_get_network_concurrency_permit: "_client_get_network_concurrency_permit" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_get_register: "_client_get_register" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_get_signed_register_from_network: "_client_get_signed_register_from_network" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_get_spend_from_network: "_client_get_spend_from_network" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_get_store_costs_at_address: "_client_get_store_costs_at_address" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_new: "_client_new" [
-				rt [handle!]
-				
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_send: "_client_send" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_send_without_verify: "_client_send_without_verify" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_client_verify: "_client_verify" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-
-
-
 	
 
 	
 
 	
-			c_clienteventsreceiver_recv: "_clienteventsreceiver_recv" [
+			c_safe_connect: "safe_connect" [
 				rt [handle!]
-				 ref [handle!] 
+				ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
-			]
-	
-
-
-
-	
-
-	
-
-	
-			c_clientregister_create_online: "_clientregister_create_online" [
-				rt [handle!]
-				
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_clientregister_create_public_online: "_clientregister_create_public_online" [
-				rt [handle!]
-				
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_clientregister_push: "_clientregister_push" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_clientregister_sync: "_clientregister_sync" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_clientregister_write_atop_online: "_clientregister_write_atop_online" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_clientregister_write_merging_branches_online: "_clientregister_write_merging_branches_online" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_clientregister_write_online: "_clientregister_write_online" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-
-
-
-	
-
-	
-
-	
-			c_files_pay_for_chunks: "_files_pay_for_chunks" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_files_read_bytes: "_files_read_bytes" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_files_read_from: "_files_read_from" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_files_upload_with_payments: "_files_upload_with_payments" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-
-
-
-	
-
-	
-
-	
-			c_walletclient_get_store_cost_at_address: "_walletclient_get_store_cost_at_address" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
-			]
-	
-			c_walletclient_send: "_walletclient_send" [
-				rt [handle!]
-				 ref [handle!] 
-				params [byte-ptr!]
-				params_size [integer!]
+				return: [buffer!]
 			]
 	
 
@@ -230,6 +46,10 @@ Red [
 
 			cstring_free: "cstring_free" [
 				ptr [c-string!]
+			]
+			
+			buffer_free: "buffer_free" [
+				buf [handle!]
 			]
 		]
 	]
@@ -245,791 +65,58 @@ Red [
 
 
 
+safe_default: routine [
+	return: [handle!]
+	/local ref
+] [
+	ref: handle/box as integer! c_safe_default
+	as red-handle! SET_RETURN(ref)
+]
+
+safe_free: routine [
+	ref [handle!]
+] [
+	c_safe_free as handle! ref/value
+]
 
 
 
 
 
-client_create_register: function [
-	 ref [handle!] 
-    meta			;; in rust: XorName
-    wallet_client			;; in rust: &mut WalletClient
-    verify_store			;; in rust: bool
+
+safe_connect: function [
+	ref [handle!] 
+    peers			;; in rust: Vec<String>
+    secret			;; in rust: Option<String>
     
 ] [
 	params: to binary! ""
 	save/as
 		params
-		reduce [ meta  wallet_client  verify_store ]
+		reduce [ peers  secret ]
 		'redbin
 
 	probe length? params
-	r_client_create_register
-		 ref 
+	result_buf: r_safe_connect
+		ref 
 		probe params
 ]
 
-r_client_create_register: routine [
-	 ref [handle!] 
+r_safe_connect: routine [
+	ref [handle!] 
 	params [binary!]
+	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
+	/local buffer ret
 ] [
-	c_client_create_register
+	buffer: c_safe_connect
 		tokio_runtime
-		 as handle! ref/value 
+		as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
-]
-
-
-client_get_chunk: function [
-	 ref [handle!] 
-    address			;; in rust: ChunkAddress
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ address ]
-		'redbin
-
-	probe length? params
-	r_client_get_chunk
-		 ref 
-		probe params
-]
-
-r_client_get_chunk: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_get_chunk
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_get_network_concurrency_permit: function [
-	 ref [handle!] 
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce []
-		'redbin
-
-	probe length? params
-	r_client_get_network_concurrency_permit
-		 ref 
-		probe params
-]
-
-r_client_get_network_concurrency_permit: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_get_network_concurrency_permit
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_get_register: function [
-	 ref [handle!] 
-    address			;; in rust: RegisterAddress
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ address ]
-		'redbin
-
-	probe length? params
-	r_client_get_register
-		 ref 
-		probe params
-]
-
-r_client_get_register: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_get_register
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_get_signed_register_from_network: function [
-	 ref [handle!] 
-    address			;; in rust: RegisterAddress
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ address ]
-		'redbin
-
-	probe length? params
-	r_client_get_signed_register_from_network
-		 ref 
-		probe params
-]
-
-r_client_get_signed_register_from_network: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_get_signed_register_from_network
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_get_spend_from_network: function [
-	 ref [handle!] 
-    unique_pubkey			;; in rust: &UniquePubkey
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ unique_pubkey ]
-		'redbin
-
-	probe length? params
-	r_client_get_spend_from_network
-		 ref 
-		probe params
-]
-
-r_client_get_spend_from_network: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_get_spend_from_network
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_get_store_costs_at_address: function [
-	 ref [handle!] 
-    address			;; in rust: &NetworkAddress
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ address ]
-		'redbin
-
-	probe length? params
-	r_client_get_store_costs_at_address
-		 ref 
-		probe params
-]
-
-r_client_get_store_costs_at_address: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_get_store_costs_at_address
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_new: function [
 	
-    signer			;; in rust: SecretKey
-    peers			;; in rust: Option<Vec<Multiaddr>>
-    req_response_timeout			;; in rust: Option<Duration>
-    custom_concurrency_limit			;; in rust: Option<usize>
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ signer  peers  req_response_timeout  custom_concurrency_limit ]
-		'redbin
-
-	probe length? params
-	r_client_new
-		
-		probe params
-]
-
-r_client_new: routine [
-	
-	params [binary!]
-] [
-	c_client_new
-		tokio_runtime
-		
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_send: function [
-	 ref [handle!] 
-    spend_requests			;; in rust: &BTreeSet<SpendRequest>
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ spend_requests  verify_store ]
-		'redbin
-
-	probe length? params
-	r_client_send
-		 ref 
-		probe params
-]
-
-r_client_send: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_send
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_send_without_verify: function [
-	 ref [handle!] 
-    transfer			;; in rust: TransferOutputs
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ transfer ]
-		'redbin
-
-	probe length? params
-	r_client_send_without_verify
-		 ref 
-		probe params
-]
-
-r_client_send_without_verify: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_send_without_verify
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-client_verify: function [
-	 ref [handle!] 
-    cash_note			;; in rust: &CashNote
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ cash_note ]
-		'redbin
-
-	probe length? params
-	r_client_verify
-		 ref 
-		probe params
-]
-
-r_client_verify: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_client_verify
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-
-
-
-
-
-
-
-
-
-clienteventsreceiver_recv: function [
-	 ref [handle!] 
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce []
-		'redbin
-
-	probe length? params
-	r_clienteventsreceiver_recv
-		 ref 
-		probe params
-]
-
-r_clienteventsreceiver_recv: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_clienteventsreceiver_recv
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-
-
-
-
-
-
-
-
-
-clientregister_create_online: function [
-	
-    client			;; in rust: Client
-    meta			;; in rust: XorName
-    wallet_client			;; in rust: &mut WalletClient
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ client  meta  wallet_client  verify_store ]
-		'redbin
-
-	probe length? params
-	r_clientregister_create_online
-		
-		probe params
-]
-
-r_clientregister_create_online: routine [
-	
-	params [binary!]
-] [
-	c_clientregister_create_online
-		tokio_runtime
-		
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-clientregister_create_public_online: function [
-	
-    client			;; in rust: Client
-    meta			;; in rust: XorName
-    wallet_client			;; in rust: &mut WalletClient
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ client  meta  wallet_client  verify_store ]
-		'redbin
-
-	probe length? params
-	r_clientregister_create_public_online
-		
-		probe params
-]
-
-r_clientregister_create_public_online: routine [
-	
-	params [binary!]
-] [
-	c_clientregister_create_public_online
-		tokio_runtime
-		
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-clientregister_push: function [
-	 ref [handle!] 
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ verify_store ]
-		'redbin
-
-	probe length? params
-	r_clientregister_push
-		 ref 
-		probe params
-]
-
-r_clientregister_push: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_clientregister_push
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-clientregister_sync: function [
-	 ref [handle!] 
-    wallet_client			;; in rust: &mut WalletClient
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ wallet_client  verify_store ]
-		'redbin
-
-	probe length? params
-	r_clientregister_sync
-		 ref 
-		probe params
-]
-
-r_clientregister_sync: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_clientregister_sync
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-clientregister_write_atop_online: function [
-	 ref [handle!] 
-    entry			;; in rust: &[u8]
-    children			;; in rust: BTreeSet<EntryHash>
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ entry  children  verify_store ]
-		'redbin
-
-	probe length? params
-	r_clientregister_write_atop_online
-		 ref 
-		probe params
-]
-
-r_clientregister_write_atop_online: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_clientregister_write_atop_online
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-clientregister_write_merging_branches_online: function [
-	 ref [handle!] 
-    entry			;; in rust: &[u8]
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ entry  verify_store ]
-		'redbin
-
-	probe length? params
-	r_clientregister_write_merging_branches_online
-		 ref 
-		probe params
-]
-
-r_clientregister_write_merging_branches_online: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_clientregister_write_merging_branches_online
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-clientregister_write_online: function [
-	 ref [handle!] 
-    entry			;; in rust: &[u8]
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ entry  verify_store ]
-		'redbin
-
-	probe length? params
-	r_clientregister_write_online
-		 ref 
-		probe params
-]
-
-r_clientregister_write_online: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_clientregister_write_online
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-
-
-
-
-
-
-
-
-
-files_pay_for_chunks: function [
-	 ref [handle!] 
-    chunks			;; in rust: Vec<XorName>
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ chunks  verify_store ]
-		'redbin
-
-	probe length? params
-	r_files_pay_for_chunks
-		 ref 
-		probe params
-]
-
-r_files_pay_for_chunks: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_files_pay_for_chunks
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-files_read_bytes: function [
-	 ref [handle!] 
-    address			;; in rust: ChunkAddress
-    downloaded_file_path			;; in rust: Option<PathBuf>
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ address  downloaded_file_path ]
-		'redbin
-
-	probe length? params
-	r_files_read_bytes
-		 ref 
-		probe params
-]
-
-r_files_read_bytes: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_files_read_bytes
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-files_read_from: function [
-	 ref [handle!] 
-    address			;; in rust: ChunkAddress
-    position			;; in rust: usize
-    length			;; in rust: usize
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ address  position  length ]
-		'redbin
-
-	probe length? params
-	r_files_read_from
-		 ref 
-		probe params
-]
-
-r_files_read_from: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_files_read_from
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-files_upload_with_payments: function [
-	 ref [handle!] 
-    bytes			;; in rust: Bytes
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ bytes  verify_store ]
-		'redbin
-
-	probe length? params
-	r_files_upload_with_payments
-		 ref 
-		probe params
-]
-
-r_files_upload_with_payments: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_files_upload_with_payments
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-
-
-
-
-
-
-
-
-
-walletclient_get_store_cost_at_address: function [
-	 ref [handle!] 
-    address			;; in rust: &NetworkAddress
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ address ]
-		'redbin
-
-	probe length? params
-	r_walletclient_get_store_cost_at_address
-		 ref 
-		probe params
-]
-
-r_walletclient_get_store_cost_at_address: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_walletclient_get_store_cost_at_address
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
-]
-
-
-walletclient_send: function [
-	 ref [handle!] 
-    amount			;; in rust: NanoTokens
-    to			;; in rust: MainPubkey
-    verify_store			;; in rust: bool
-    
-] [
-	params: to binary! ""
-	save/as
-		params
-		reduce [ amount  to  verify_store ]
-		'redbin
-
-	probe length? params
-	r_walletclient_send
-		 ref 
-		probe params
-]
-
-r_walletclient_send: routine [
-	 ref [handle!] 
-	params [binary!]
-] [
-	c_walletclient_send
-		tokio_runtime
-		 as handle! ref/value 
-		binary/rs-head params
-		binary/rs-length? params
+	ret: binary/load buffer/data buffer/len
+	buffer_free buffer
+	as red-binary! SET_RETURN(ret)
 ]
 
 
@@ -1051,41 +138,18 @@ to-vec-u8: function [
 
 
 
-client!: object [
+safe!: object [
 	ref: none
 
 	
+	init: does [
+		ref: safe_default
+	]
 
-	
-]
-
-clienteventsreceiver!: object [
-	ref: none
-
-	
-
-	
-]
-
-clientregister!: object [
-	ref: none
-
-	
-
-	
-]
-
-files!: object [
-	ref: none
-
-	
-
-	
-]
-
-walletclient!: object [
-	ref: none
-
+	free: does [
+		safe_free ref
+		ref: none
+	]
 	
 
 	

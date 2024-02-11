@@ -2,7 +2,7 @@ Red [
 	Name: {FFI interface and Red bindings generator for Safe Network}
 ]
 
-api-root: %../github/safe_network/sn_client
+api-root: %../safe
 output: %output
 
 
@@ -132,7 +132,7 @@ scan-mod: function [
 			print st-name
 			parse inside [
 				any thru [
-					"pub async fn " copy fn-name some letter
+					"pub " ["async " (async: true) | (async: false)] "fn " copy fn-name some letter
 					paren (fn-params: inside)
 					" -> " copy fn-return to " {"
 					(
@@ -143,6 +143,7 @@ scan-mod: function [
 								params: (make map! [])
 								return: (fn-return)
 								self: (false)
+								async: (async)
 							]
 							parse fn-params params
 							structure/pub-structs/(to word! st-name)/methods/(to word! fn-name): method

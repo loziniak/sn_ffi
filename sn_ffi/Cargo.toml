@@ -7,17 +7,10 @@ edition = "2018"
 [dependencies]
 redbin = { path = "../../../redbin" }
 bls = { package = "blsttc", version = "8.0.1" }
-bytes = "1.0.1"
 libp2p = { version="0.52", features = ["identify"] }
-tokio = "1.17.0"
+tokio = { version="1.17.0", features = ["rt", "rt-multi-thread"] }
 serde = "1.0.130"
-sn_dbc = { version = "19.1.1", features = ["serdes"] }
-xor_name = "5.0.0"
-sn_client = { path = "../../../github/safe_network/sn_client" }
-sn_networking = { path = "../../../github/safe_network/sn_networking" }
-sn_protocol = { path = "../../../github/safe_network/sn_protocol" }
-sn_registers = { path = "../../../github/safe_network/sn_registers" }
-sn_transfers = { path = "../../../github/safe_network/sn_transfers" }
+safe = { path = "../../../safe" }
 
 [lib]
 name = "sn_ffi"
