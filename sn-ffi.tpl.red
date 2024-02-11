@@ -3,6 +3,13 @@ Red [
 ]
 
 #system [
+	
+	buffer!: alias struct! [
+		data [byte-ptr!]
+		len [integer!]
+	]
+
+
 	#import [
 
 		"sn_ffi/target/i686-unknown-linux-gnu/debug/libsn_ffi.so" cdecl [
@@ -34,11 +41,12 @@ comment {bg:OBJ [
 	comment {bg:s-afe_METHOD [
 		METHODNAME: "c-onnect"
 	]}
-			c_s-afe_c-onnect: "_s-afe_c-onnect" [
+			c_s-afe_c-onnect: "s-afe_c-onnect" [
 				rt [handle!]
-				comment {bg:s-afe_c-onnect_SELF []}ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
+				comment {bg:s-afe_c-onnect_SELF []} ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
 				params [byte-ptr!]
 				params_size [integer!]
+				return: [buffer!]
 			]
 	comment {bg-end:s-afe_METHOD}
 
@@ -51,6 +59,10 @@ comment {bg-end:OBJ}
 			cstring_free: "cstring_free" [
 				ptr [c-string!]
 			]
+			
+			buffer_free: "buffer_free" [
+				buf [handle!]
+			]
 		]
 	]
 	
@@ -61,10 +73,28 @@ comment {bg-end:OBJ}
 
 ; low-level routines
 
+sn-ffi-result: function [v] [
+	if all [
+		paren! = type? v
+		"Err" = v/1
+	] [
+		probe v/2/1
+		do make error! v/2/2
+	]
+	
+	either all [
+		paren! = type? v
+		"Ok" = v/1
+	] [
+		v/2
+	] [
+		v
+	]
+]
+
 comment {bg:OBJ [
 	NAME: "s-afe"
 ]}
-
 
 comment {bg:s-afe_OBJ_DEFAULT []}
 s-afe_default: routine [
@@ -107,11 +137,11 @@ comment {bg:s-afe_METHOD [
 ]}
 
 s-afe_c-onnect: function [
-	comment {bg:s-afe_c-onnect_SELF []}ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
+	comment {bg:s-afe_c-onnect_SELF []} ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
     comment {bg:s-afe_c-onnect_PARAM [
         PARAMNAME: "app-keypair"
         PARAMTYPE: "Option<Keypair>"
-    ]}app-keypair			;; in rust: Option<Keypair>
+    ]} app-keypair			;; in rust: Option<Keypair>
     comment {bg-end:s-afe_c-onnect_PARAM}
 ] [
 	params: to binary! ""
@@ -121,20 +151,28 @@ s-afe_c-onnect: function [
 		'redbin
 
 	probe length? params
-	r_s-afe_c-onnect
-		comment {bg:s-afe_c-onnect_SELF []}ref comment {bg-end:s-afe_c-onnect_SELF}
+	result_buf: r_s-afe_c-onnect
+		comment {bg:s-afe_c-onnect_SELF []} ref comment {bg-end:s-afe_c-onnect_SELF}
 		probe params
+	result: probe load/as result_buf 'redbin
+	sn-ffi-result result
 ]
 
 r_s-afe_c-onnect: routine [
-	comment {bg:s-afe_c-onnect_SELF []}ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
+	comment {bg:s-afe_c-onnect_SELF []} ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
 	params [binary!]
+	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
+	/local buffer ret
 ] [
-	c_s-afe_c-onnect
+	buffer: c_s-afe_c-onnect
 		tokio_runtime
-		comment {bg:s-afe_c-onnect_SELF []}as handle! ref/value comment {bg-end:s-afe_c-onnect_SELF}
+		comment {bg:s-afe_c-onnect_SELF []} as handle! ref/value comment {bg-end:s-afe_c-onnect_SELF}
 		binary/rs-head params
 		binary/rs-length? params
+	
+	ret: binary/load buffer/data buffer/len
+	buffer_free as handle! buffer
+	as red-binary! SET_RETURN(ret)
 ]
 comment {bg-end:s-afe_METHOD}
 
@@ -180,69 +218,25 @@ s-afe!: object [
 		s-afe_xorurl_base ref
 	]
 	comment {bg-end:s-afe_FIELD_STRING}
+	
+	comment {bg:s-afe_METHOD [
+		METHODNAME: "c-onnect"
+	]}
+	c-onnect: function [
+	    comment {bg:s-afe_c-onnect_PARAM [
+	        PARAMNAME: "app-keypair"
+	        PARAMTYPE: "Option<Keypair>"
+	    ]} app-keypair			;; in rust: Option<Keypair>
+	    comment {bg-end:s-afe_c-onnect_PARAM}
+	] [
+		s-afe_c-onnect
+			comment {bg:s-afe_c-onnect_SELF []} ref comment {bg-end:s-afe_c-onnect_SELF}
+			comment {bg:s-afe_c-onnect_PARAM [PARAMNAME: "app-keypair"]} app-keypair
+			comment {bg-end:s-afe_c-onnect_PARAM}
+	]
+	comment {bg-end:s-afe_METHOD}
+
 ]
 comment {bg-end:OBJ}
 
-safe!: make safe! [
-
-	init: does [
-; 		ref: safe_default
-		ref: none
-	]
-
-	free: does [
-; 		safe_free ref
-		ref: none
-	]
-
-	connect: function [
-		ip [tuple!]
-		port [integer!]
-	] [
-		genesis-key: to-vec-u8 #{					
-			8640 e62c c44e 75cf
-			4fad c8ee 91b7 4b4c
-			f0fd 2c09 84fb 0e3a
-			b40f 0268 0685 7d8c
-			41f0 1d37 2522 3c55
-			b1ef 87d6 69f5 e2cc
-		}
-
-		safe_connect
-			ref
-			compose/deep [ ;bootstrap_config
-				(genesis-key)
-				[
-					(rejoin [ip #":" port])
-					(rejoin [ip #":" port + 1])		;-- NODES_TO_CONTACT_PER_STARTUP_BATCH = 3  @ safe_network/src/client/connections/messaging.rs
-					(rejoin [ip #":" port + 2])
-				]
-			]
-			none ;keypair
-			none ;config_path
-			["secs" 10 "nanos" 0] ;timeout
-	]
-]
-
-
-client!: make client! [
-
-	init: function [] [
-		client_new
-			[				;-- blsttc::SecretKey / blstrs::Scalar / blst::blst_fr (https://docs.rs/blst/0.3.11/blst/struct.blst_fr.html)
-				"l" [
-					#{8640 e62c c44e 75cf}
-					#{4fad c8ee 91b7 4b4c}
-					#{f0fd 2c09 84fb 0e3a}
-					#{b40f 0268 0685 7d8c}
-				]
-			]
-			[				;-- peers
-				"/ip4/139.59.125.187/tcp/35163/p2p/12D3KooWE75czdXUnZJ59gtMDwNZCyBx24whf9WXbNTmEoCaiUrA"
-			]
-			["secs" 10 "nanos" 0] ;-- req_response_timeout
-			none			;-- custom_concurrency_limit
-	]
-
-]
 

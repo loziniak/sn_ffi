@@ -64,7 +64,7 @@ pub extern "C" fn safe_connect(
     
         Vec<String>, // peers 
         Option<String>, // secret 
-    ) = from_redbin(params).unwrap();
+    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
     println!("safe_connect params: {:?}", params);
 
     let ret = unsafe { // Result<Option<String>, Error>

@@ -31,7 +31,7 @@ Red [
 	
 			c_safe_connect: "safe_connect" [
 				rt [handle!]
-				ref [handle!] 
+				 ref [handle!] 
 				params [byte-ptr!]
 				params_size [integer!]
 				return: [buffer!]
@@ -61,6 +61,24 @@ Red [
 
 ; low-level routines
 
+sn-ffi-result: function [v] [
+	if all [
+		paren! = type? v
+		"Err" = v/1
+	] [
+		probe v/2/1
+		do make error! v/2/2
+	]
+	
+	either all [
+		paren! = type? v
+		"Ok" = v/1
+	] [
+		v/2
+	] [
+		v
+	]
+]
 
 
 
@@ -85,9 +103,9 @@ safe_free: routine [
 
 
 safe_connect: function [
-	ref [handle!] 
-    peers			;; in rust: Vec<String>
-    secret			;; in rust: Option<String>
+	 ref [handle!] 
+     peers			;; in rust: Vec<String>
+     secret			;; in rust: Option<String>
     
 ] [
 	params: to binary! ""
@@ -98,24 +116,26 @@ safe_connect: function [
 
 	probe length? params
 	result_buf: r_safe_connect
-		ref 
+		 ref 
 		probe params
+	result: probe load/as result_buf 'redbin
+	sn-ffi-result result
 ]
 
 r_safe_connect: routine [
-	ref [handle!] 
+	 ref [handle!] 
 	params [binary!]
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
 	buffer: c_safe_connect
 		tokio_runtime
-		as handle! ref/value 
+		 as handle! ref/value 
 		binary/rs-head params
 		binary/rs-length? params
 	
 	ret: binary/load buffer/data buffer/len
-	buffer_free buffer
+	buffer_free as handle! buffer
 	as red-binary! SET_RETURN(ret)
 ]
 
@@ -153,69 +173,22 @@ safe!: object [
 	
 
 	
-]
-
-
-safe!: make safe! [
-
-	init: does [
-; 		ref: safe_default
-		ref: none
-	]
-
-	free: does [
-; 		safe_free ref
-		ref: none
-	]
-
+	
+	
 	connect: function [
-		ip [tuple!]
-		port [integer!]
+	     peers			;; in rust: Vec<String>
+	     secret			;; in rust: Option<String>
+	    
 	] [
-		genesis-key: to-vec-u8 #{					
-			8640 e62c c44e 75cf
-			4fad c8ee 91b7 4b4c
-			f0fd 2c09 84fb 0e3a
-			b40f 0268 0685 7d8c
-			41f0 1d37 2522 3c55
-			b1ef 87d6 69f5 e2cc
-		}
-
 		safe_connect
-			ref
-			compose/deep [ ;bootstrap_config
-				(genesis-key)
-				[
-					(rejoin [ip #":" port])
-					(rejoin [ip #":" port + 1])		;-- NODES_TO_CONTACT_PER_STARTUP_BATCH = 3  @ safe_network/src/client/connections/messaging.rs
-					(rejoin [ip #":" port + 2])
-				]
-			]
-			none ;keypair
-			none ;config_path
-			["secs" 10 "nanos" 0] ;timeout
+			 ref 
+			 peers
+			 secret
+			
 	]
+	
+
 ]
 
 
-client!: make client! [
-
-	init: function [] [
-		client_new
-			[				;-- blsttc::SecretKey / blstrs::Scalar / blst::blst_fr (https://docs.rs/blst/0.3.11/blst/struct.blst_fr.html)
-				"l" [
-					#{8640 e62c c44e 75cf}
-					#{4fad c8ee 91b7 4b4c}
-					#{f0fd 2c09 84fb 0e3a}
-					#{b40f 0268 0685 7d8c}
-				]
-			]
-			[				;-- peers
-				"/ip4/139.59.125.187/tcp/35163/p2p/12D3KooWE75czdXUnZJ59gtMDwNZCyBx24whf9WXbNTmEoCaiUrA"
-			]
-			["secs" 10 "nanos" 0] ;-- req_response_timeout
-			none			;-- custom_concurrency_limit
-	]
-
-]
 

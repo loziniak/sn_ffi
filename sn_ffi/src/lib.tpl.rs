@@ -89,7 +89,7 @@ pub extern "C" fn s_afe_connect(
         PARAMTYPE: "Option<Keypair>"
     ]*/
         Option<Keypair>, // app_keypair /*bg-end:s_afe_connect_PARAM*/
-    ) = from_redbin(params).unwrap();
+    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
     println!("s_afe_connect params: {:?}", params);
 
     let ret = unsafe { // Result<(), Error>
