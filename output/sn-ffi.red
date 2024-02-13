@@ -104,8 +104,8 @@ safe_free: routine [
 
 safe_connect: function [
 	 ref [handle!] 
-     peers			;; in rust: Vec<String>
-     secret			;; in rust: Option<String>
+     peers			;; in rust: Vec<Multiaddr>
+     secret			;; in rust: Option<SecretKey>
     
 ] [
 	params: to binary! ""
@@ -115,7 +115,7 @@ safe_connect: function [
 		'redbin
 
 	probe length? params
-	result_buf: r_safe_connect
+	probe result_buf: r_safe_connect
 		 ref 
 		probe params
 	result: probe load/as result_buf 'redbin
@@ -176,8 +176,8 @@ safe!: object [
 	
 	
 	connect: function [
-	     peers			;; in rust: Vec<String>
-	     secret			;; in rust: Option<String>
+	     peers			;; in rust: Vec<Multiaddr>
+	     secret			;; in rust: Option<SecretKey>
 	    
 	] [
 		safe_connect

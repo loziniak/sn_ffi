@@ -7,8 +7,10 @@ print s/init
 ; probe s/xorurl-base
 
 probe s/connect
-; 	127.0.0.1 12000
+
 	["/ip4/127.0.0.1/tcp/35441/p2p/12D3KooWMNzC2ngpTL8itJ7LkaP1eHYxBkER6xvoAgLq9khNScHh"]
-	"secret key hex should go here"
+; 	[]
+
+	[87 169 17 205 67 20 92 190 47 255 180 185 171 163 172 106 90 98 133 171 224 45 25 115 136 176 146 99 2 226 138 1]
 
 s/free

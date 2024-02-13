@@ -151,7 +151,7 @@ s-afe_c-onnect: function [
 		'redbin
 
 	probe length? params
-	result_buf: r_s-afe_c-onnect
+	probe result_buf: r_s-afe_c-onnect
 		comment {bg:s-afe_c-onnect_SELF []} ref comment {bg-end:s-afe_c-onnect_SELF}
 		probe params
 	result: probe load/as result_buf 'redbin
