@@ -6,10 +6,10 @@
 use std::fmt;
 use std::ffi::{CString, c_char};
 use tokio::runtime::Runtime;
-use bls::SecretKey;
-use libp2p::{PeerId, Multiaddr};
 use redbin::{from_bytes as from_redbin, to_bytes as to_redbin};
 use serde::Serialize;
+
+use safe::{SecretKey, Multiaddr, XorName};
 
 /*bg:API_IMPORT [MOD:"sn_api::" NAME: "Safe"]*/
 use sn_api::Safe;/*bg-end:API_IMPORT*/
@@ -100,7 +100,7 @@ pub extern "C" fn s_afe_connect(
     println!("s_afe_connect params: {:?}", params);
 
     let ret = unsafe { // Result<(), Error>
-        /*bg:s_afe_connect_SELF []*/let s_afe = &mut *s_afe_ptr;/*bg-end:s_afe_connect_SELF*/
+        /*bg:s_afe_connect_SELF [ SELF_PTR: "&mut " ]*/let s_afe = &mut std::ptr::read(s_afe_ptr);/*bg-end:s_afe_connect_SELF*/
         /*bg:s_afe_connect_ASYNC []*/
         let rt = &mut *rt_ptr;
         rt.block_on(/*bg-end:s_afe_connect_ASYNC*/
@@ -108,9 +108,14 @@ pub extern "C" fn s_afe_connect(
         /*bg:s_afe_connect_ASYNC []*/
         )/*bg-end:s_afe_connect_ASYNC*/
     };
+    /*bg:s_afe_connect_RETURN_RESULT []*/
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    /*bg:s_afe_connect_RETURN_REF []*/
+    /*bg-end:s_afe_connect_RETURN_RESULT*/
+    /*bg:s_afe_connect_RETURN_REF_RESULT []*/
     let ret: Result<usize, ErrorString> = ret.map(|value| Box::into_raw(Box::new(value)) as usize);
+    /*bg-end:s_afe_connect_RETURN_REF_RESULT*/
+    /*bg:s_afe_connect_RETURN_REF []*/
+    let ret: usize = Box::into_raw(Box::new(ret)) as usize;
     /*bg-end:s_afe_connect_RETURN_REF*/
     println!("s_afe_connect ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
@@ -124,7 +129,6 @@ pub extern "C" fn s_afe_connect(
 
 #[no_mangle]
 pub extern "C" fn init_runtime() -> *mut Runtime {
-	let rt: Runtime = Runtime::new().unwrap();
 //	let rt: Runtime = Builder::new_current_thread().build().unwrap(); // TODO: try with single thread
     Box::into_raw(Box::new(Runtime::new().unwrap()))
 }
@@ -135,7 +139,7 @@ pub extern "C" fn cstring_free(cstring: *mut c_char) {
         return;
     }
     unsafe {
-        CString::from_raw(cstring);
+        let _ = CString::from_raw(cstring);
     }
 }
 
@@ -143,6 +147,6 @@ pub extern "C" fn cstring_free(cstring: *mut c_char) {
 pub extern "C" fn buffer_free(buf: Buffer) {
 	let b: &mut [u8] = unsafe { std::slice::from_raw_parts_mut(buf.data, buf.len) };
 	unsafe {
-		Box::from_raw(b.as_mut_ptr());
+		let _ = Box::from_raw(b.as_mut_ptr());
 	}
 }

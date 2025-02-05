@@ -43,7 +43,7 @@ blacklisted?: function [
 	]
 ]
 string-types: ["String" "XorUrlBase" "XorUrl"]
-ref-types: ["OwnedSemaphorePermit"]
+ref-types: ["XorNameBuilder"]
 
 
 clean: function [code [string!]] [
@@ -120,7 +120,7 @@ scan-mod: function [
 	]
 	
 	param: [
-		[[["&mut self" | "&self"] (method/self: true)]
+		[[[["mut self" | "self"] (method/self-ptr: false) |"&mut self" | "&self"] (method/self: true)]
 			| [copy param-name some letter ": " copy param-type paramtype (method/params/(to word! param-name): param-type)]
 		]
 		["," | end]
@@ -137,12 +137,15 @@ scan-mod: function [
 					" -> " copy fn-return to " {"
 					(
 						unless blacklisted? st-name fn-name [
-							insert back tail fn-return ", Error"
+							if find/match fn-return "Result<" [
+								insert back tail fn-return ", Error"
+							]
 							replace fn-return "Self" st-name
 							method: make map! compose [
 								params: (make map! [])
 								return: (fn-return)
 								self: (false)
+								self-ptr: (true)
 								async: (async)
 							]
 							parse fn-params params
@@ -208,10 +211,17 @@ replace-args: func [
 	body [string!]
 	args [block!]
 	vars [map!]
-	/local n s
+	/local n s v
 ] [
 	foreach [n s] args [
-		replace/all/case  body  s  vars/(to word! n)
+		v: vars/(to word! n)
+		either logic? v [
+			unless v [
+				replace/all/case  body  s  ""
+			]
+		] [
+			replace/all/case  body  s  v
+		]
 	]
 ]
 
@@ -306,13 +316,28 @@ generate-rust: function [
 				method: struct/methods/(method-name)
 				vars/METHODNAME: method-name
 				vars/RETURN: method/return
+				vars/SELF_PTR: method/self-ptr
 				template-generate tpl "METHOD" delimiters vars
 
+				if method/async [
+					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_ASYNC"]
+						delimiters vars
+				]
 				if method/self [
-					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_SELF"] delimiters vars
+					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_SELF"]
+						delimiters vars
+				]
+				if find/match method/return "Result<" [
+					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_RETURN_RESULT"]
+						delimiters vars
 				]
 				if find ref-types result-value method/return [
-					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_RETURN_REF"] delimiters vars
+					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_RETURN_REF_RESULT"]
+						delimiters vars
+				]
+				if find ref-types method/return [
+					template-generate tpl rejoin [vars/LOWNAME "_" vars/METHODNAME "_RETURN_REF"]
+						delimiters vars
 				]
 				params: method/params
 				param-num: 0
