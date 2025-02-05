@@ -86,6 +86,11 @@ scan-mod: function [
 	]
 
 	pub-struct: [
+		(derive-default: false)
+		opt ["#[derive(" any [copy derive some letter (if "Default" = probe derive [
+			derive-default: true
+		]) opt ", "] ")]"]
+		any [space | newline | tab]
 		"pub struct " copy name some letter (
 			st-name: name
 			struct: make map! compose/only [
@@ -93,6 +98,10 @@ scan-mod: function [
 				mod: (copy mod-path)
 				string-fields: (make map! [])
 				methods: (make map! [])
+			]
+			if derive-default [
+				struct/default?: true
+				derive-default: false
 			]
 
 			structure/pub-structs/(to word! st-name): struct

@@ -32,6 +32,21 @@ impl fmt::Debug for ErrorString {
 }
 
 
+#[no_mangle]
+pub extern "C" fn safe_default() -> *mut Safe {
+    Box::into_raw(Box::new(Safe::default()))
+}
+
+#[no_mangle]
+pub extern "C" fn safe_free(ptr: *mut Safe) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe {
+        Box::from_raw(ptr);
+    }
+}
+
 
 
 

@@ -17,6 +17,14 @@ Red [
 
 
 	
+			c_safe_default: "safe_default" [
+				return: [handle!]
+			]
+
+			c_safe_free: "safe_free" [
+				ref [handle!]
+			]
+	
 
 	
 
@@ -210,6 +218,20 @@ sn-ffi-result: function [v] [
 
 
 
+
+safe_default: routine [
+	return: [handle!]
+	/local ref
+] [
+	ref: handle/box as integer! c_safe_default
+	as red-handle! SET_RETURN(ref)
+]
+
+safe_free: routine [
+	ref [handle!]
+] [
+	c_safe_free as handle! ref/value
+]
 
 
 
@@ -874,6 +896,15 @@ to-vec-u8: function [
 safe!: object [
 	ref: none
 
+	
+	init: does [
+		ref: safe_default
+	]
+
+	free: does [
+		safe_free ref
+		ref: none
+	]
 	
 
 	
