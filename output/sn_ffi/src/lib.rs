@@ -5,6 +5,7 @@
 
 use std::fmt;
 use std::ffi::{CString, c_char};
+use std::convert::TryInto;
 use tokio::runtime::Runtime;
 use redbin::{from_bytes as from_redbin, to_bytes as to_redbin};
 use serde::Serialize;
@@ -17,6 +18,7 @@ use safe::registers::XorNameBuilder;
 
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct Buffer {
 	data: *mut u8,
 	len: usize,
@@ -32,21 +34,6 @@ impl fmt::Debug for ErrorString {
 }
 
 
-#[no_mangle]
-pub extern "C" fn safe_default() -> *mut Safe {
-    Box::into_raw(Box::new(Safe::default()))
-}
-
-#[no_mangle]
-pub extern "C" fn safe_free(ptr: *mut Safe) {
-    if ptr.is_null() {
-        return;
-    }
-    unsafe {
-        Box::from_raw(ptr);
-    }
-}
-
 
 
 
@@ -59,13 +46,15 @@ pub extern "C" fn safe_address(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_address pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_address params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_address u8: {:?}", params);
 
     let params: (
@@ -90,7 +79,8 @@ pub extern "C" fn safe_address(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -99,13 +89,15 @@ pub extern "C" fn safe_balance(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_balance pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    println!("rt_ptr: {:?}", rt_ptr);
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_balance params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_balance u8: {:?}", params);
 
     let params: (
@@ -133,22 +125,25 @@ pub extern "C" fn safe_balance(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
 pub extern "C" fn safe_connect(
 	rt_ptr: *mut Runtime,
-	safe_ptr: *mut Safe,
+	
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_connect pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    println!("rt_ptr: {:?}", rt_ptr);
+    
+    println!("safe_connect params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     assert!(!rt_ptr.is_null());
-    assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_connect u8: {:?}", params);
 
     let params: (
@@ -156,21 +151,24 @@ pub extern "C" fn safe_connect(
         Vec<Multiaddr>, // peers 
         bool, // add_network_peers 
         Option<SecretKey>, // secret 
+        String, // log_level 
     ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
     println!("safe_connect params: {:?}", params);
 
-    let ret = unsafe { // Result<(), Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+    let ret = unsafe { // Result<Safe, Error>
+        
         
         let rt = &mut *rt_ptr;
         rt.block_on(
-        	Safe::connect(safe, params.0, params.1, params.2)
+        	Safe::connect(params.0, params.1, params.2, params.3)
         
         )
     };
     
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
     
+    
+    let ret: Result<usize, ErrorString> = ret.map(|value| Box::into_raw(Box::new(value)) as usize);
     
     
     println!("safe_connect ret: {:?}", &ret);
@@ -179,7 +177,8 @@ pub extern "C" fn safe_connect(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -188,18 +187,20 @@ pub extern "C" fn safe_download(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_download pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    println!("rt_ptr: {:?}", rt_ptr);
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_download params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_download u8: {:?}", params);
 
     let params: (
     
-        XorName, // address 
+        XorName, // xorname 
     ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
     println!("safe_download params: {:?}", params);
 
@@ -208,7 +209,7 @@ pub extern "C" fn safe_download(
         
         let rt = &mut *rt_ptr;
         rt.block_on(
-        	Safe::download(safe, &params.0)
+        	Safe::download(safe, params.0)
         
         )
     };
@@ -223,47 +224,8 @@ pub extern "C" fn safe_download(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
-}
 
-#[no_mangle]
-pub extern "C" fn safe_init_logging(
-	
-	
-	params: *const u8,
-	params_size: usize,
-) -> Buffer {
-    println!("safe_init_logging pointer: {:?}, size: {:?}", params, params_size);
-
-    
-    
-    
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
-    println!("safe_init_logging u8: {:?}", params);
-
-    let params: (
-    
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_init_logging params: {:?}", params);
-
-    let ret = unsafe { // Result<(), Error>
-        
-        
-        	Safe::init_logging()
-        
-    };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
-    
-    println!("safe_init_logging ret: {:?}", &ret);
-	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_init_logging ret_bytes: {}", hex::encode_upper(&ret_bytes));
-	let data = ret_bytes.as_mut_ptr();
-	let len = ret_bytes.len();
-	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -272,13 +234,15 @@ pub extern "C" fn safe_login(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_login pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_login params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_login u8: {:?}", params);
 
     let params: (
@@ -304,7 +268,8 @@ pub extern "C" fn safe_login(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -313,13 +278,15 @@ pub extern "C" fn safe_login_with_eth(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_login_with_eth pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_login_with_eth params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_login_with_eth u8: {:?}", params);
 
     let params: (
@@ -345,7 +312,52 @@ pub extern "C" fn safe_login_with_eth(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
+}
+
+#[no_mangle]
+pub extern "C" fn safe_log_level(
+	
+	safe_ptr: *mut Safe,
+	params: *const u8,
+	params_size: usize,
+) -> *mut Buffer {
+    
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_log_level params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
+
+    
+    assert!(!safe_ptr.is_null());
+    
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
+    println!("safe_log_level u8: {:?}", params);
+
+    let params: (
+    
+        String, // level 
+    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
+    println!("safe_log_level params: {:?}", params);
+
+    let ret = unsafe { // Result<(), Error>
+        let safe = &mut std::ptr::read(safe_ptr);
+        
+        	Safe::log_level(safe, params.0)
+        
+    };
+    
+    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+    
+    
+    
+    println!("safe_log_level ret: {:?}", &ret);
+	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
+    println!("safe_log_level ret_bytes: {}", hex::encode_upper(&ret_bytes));
+	let data = ret_bytes.as_mut_ptr();
+	let len = ret_bytes.len();
+	std::mem::forget(ret_bytes);
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -354,19 +366,21 @@ pub extern "C" fn safe_read_reg(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_read_reg pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    println!("rt_ptr: {:?}", rt_ptr);
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_read_reg params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_read_reg u8: {:?}", params);
 
     let params: (
     
         XorName, // meta 
-        Option<u64>, // version 
+        Option<u32>, // version 
     ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
     println!("safe_read_reg params: {:?}", params);
 
@@ -390,7 +404,8 @@ pub extern "C" fn safe_read_reg(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -399,13 +414,15 @@ pub extern "C" fn safe_reg_create(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_reg_create pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    println!("rt_ptr: {:?}", rt_ptr);
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_reg_create params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_reg_create u8: {:?}", params);
 
     let params: (
@@ -435,7 +452,8 @@ pub extern "C" fn safe_reg_create(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -444,13 +462,15 @@ pub extern "C" fn safe_reg_write(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_reg_write pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    println!("rt_ptr: {:?}", rt_ptr);
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_reg_write params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_reg_write u8: {:?}", params);
 
     let params: (
@@ -480,7 +500,8 @@ pub extern "C" fn safe_reg_write(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -489,13 +510,15 @@ pub extern "C" fn safe_upload(
 	safe_ptr: *mut Safe,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("safe_upload pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    println!("rt_ptr: {:?}", rt_ptr);
+    println!("safe_ptr: {:?}", safe_ptr);
+    println!("safe_upload params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("safe_upload u8: {:?}", params);
 
     let params: (
@@ -524,7 +547,8 @@ pub extern "C" fn safe_upload(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -533,13 +557,15 @@ pub extern "C" fn xornamebuilder_build(
 	xornamebuilder_ptr: *mut XorNameBuilder,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("xornamebuilder_build pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    println!("xornamebuilder_ptr: {:?}", xornamebuilder_ptr);
+    println!("xornamebuilder_build params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     assert!(!xornamebuilder_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("xornamebuilder_build u8: {:?}", params);
 
     let params: (
@@ -562,7 +588,8 @@ pub extern "C" fn xornamebuilder_build(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -571,13 +598,15 @@ pub extern "C" fn xornamebuilder_from(
 	
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("xornamebuilder_from pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    
+    println!("xornamebuilder_from params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("xornamebuilder_from u8: {:?}", params);
 
     let params: (
@@ -603,7 +632,8 @@ pub extern "C" fn xornamebuilder_from(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -612,13 +642,15 @@ pub extern "C" fn xornamebuilder_from_str(
 	
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("xornamebuilder_from_str pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    
+    println!("xornamebuilder_from_str params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("xornamebuilder_from_str u8: {:?}", params);
 
     let params: (
@@ -644,7 +676,8 @@ pub extern "C" fn xornamebuilder_from_str(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -653,13 +686,15 @@ pub extern "C" fn xornamebuilder_random(
 	
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("xornamebuilder_random pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    
+    println!("xornamebuilder_random params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("xornamebuilder_random u8: {:?}", params);
 
     let params: (
@@ -684,7 +719,8 @@ pub extern "C" fn xornamebuilder_random(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -693,13 +729,15 @@ pub extern "C" fn xornamebuilder_with_bytes(
 	xornamebuilder_ptr: *mut XorNameBuilder,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("xornamebuilder_with_bytes pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    println!("xornamebuilder_ptr: {:?}", xornamebuilder_ptr);
+    println!("xornamebuilder_with_bytes params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     assert!(!xornamebuilder_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("xornamebuilder_with_bytes u8: {:?}", params);
 
     let params: (
@@ -725,7 +763,8 @@ pub extern "C" fn xornamebuilder_with_bytes(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 #[no_mangle]
@@ -734,13 +773,15 @@ pub extern "C" fn xornamebuilder_with_str(
 	xornamebuilder_ptr: *mut XorNameBuilder,
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("xornamebuilder_with_str pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    
+    println!("xornamebuilder_ptr: {:?}", xornamebuilder_ptr);
+    println!("xornamebuilder_with_str params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     
     assert!(!xornamebuilder_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("xornamebuilder_with_str u8: {:?}", params);
 
     let params: (
@@ -766,7 +807,8 @@ pub extern "C" fn xornamebuilder_with_str(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 
 
@@ -787,7 +829,13 @@ pub extern "C" fn cstring_free(cstring: *mut c_char) {
 }
 
 #[no_mangle]
-pub extern "C" fn buffer_free(buf: Buffer) {
+pub extern "C" fn buffer_free(buf: *mut Buffer) {
+	let buf = unsafe {
+		assert!(!buf.is_null());
+		&mut *buf
+	};
+	println!("buffer_free buf: {:?}", buf);
+
 	let b: &mut [u8] = unsafe { std::slice::from_raw_parts_mut(buf.data, buf.len) };
 	unsafe {
 		let _ = Box::from_raw(b.as_mut_ptr());

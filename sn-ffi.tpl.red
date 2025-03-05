@@ -20,11 +20,11 @@ comment {bg:OBJ [
 
 	comment {bg:s-afe_OBJ_DEFAULT []}
 			c_s-afe_default: "s-afe_default" [
-				return: [handle!]
+				return: [int-ptr!]
 			]
 
 			c_s-afe_free: "s-afe_free" [
-				ref [handle!]
+				ref [int-ptr!]
 			]
 	comment {bg-end:s-afe_OBJ_DEFAULT}
 
@@ -33,7 +33,7 @@ comment {bg:OBJ [
 		FIELDNAME_DASH: "xorurl-base"
 	]}
 			c_s-afe_xorurl_base: "s-afe_xorurl_base" [
-				ref [handle!]
+				ref [int-ptr!]
 				return: [c-string!]
 			]
 	comment {bg-end:s-afe_FIELD_STRING}
@@ -42,8 +42,8 @@ comment {bg:OBJ [
 		METHODNAME: "c-onnect"
 	]}
 			c_s-afe_c-onnect: "s-afe_c-onnect" [
-				rt [handle!]
-				comment {bg:s-afe_c-onnect_SELF []} ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
+				rt [int-ptr!] ;@@ TODO: async
+				comment {bg:s-afe_c-onnect_SELF []} ref [int-ptr!] comment {bg-end:s-afe_c-onnect_SELF}
 				params [byte-ptr!]
 				params_size [integer!]
 				return: [buffer!]
@@ -53,7 +53,7 @@ comment {bg:OBJ [
 comment {bg-end:OBJ}
 
 			init_runtime: "init_runtime" [
-				return: [handle!]
+				return: [int-ptr!]
 			]
 
 			cstring_free: "cstring_free" [
@@ -61,7 +61,7 @@ comment {bg-end:OBJ}
 			]
 			
 			buffer_free: "buffer_free" [
-				buf [handle!]
+				buf [buffer!]
 			]
 		]
 	]
@@ -73,7 +73,7 @@ comment {bg-end:OBJ}
 
 ; low-level routines
 
-sn-ffi-result: function [v] [
+sn-ffi-result: function [v] [		;; unwrap() in Rust's terms
 	if all [
 		paren! = type? v
 		"Err" = v/1
@@ -98,17 +98,15 @@ comment {bg:OBJ [
 
 comment {bg:s-afe_OBJ_DEFAULT []}
 s-afe_default: routine [
-	return: [handle!]
-	/local ref
+	return: [integer!]
 ] [
-	ref: handle/box as integer! c_s-afe_default
-	as red-handle! SET_RETURN(ref)
+	integer/box as integer! c_s-afe_default
 ]
 
 s-afe_free: routine [
-	ref [handle!]
+	ref [integer!]
 ] [
-	c_s-afe_free as handle! ref/value
+	c_s-afe_free ref
 ]
 comment {bg-end:s-afe_OBJ_DEFAULT}
 
@@ -117,11 +115,11 @@ comment {bg:s-afe_FIELD_STRING [
 	FIELDNAME_DASH: "xorurl-base"
 ]}
 s-afe_xorurl_base: routine [
-	ref [handle!]
+	ref [integer!]
 	return: [string!]
 	/local str buffer size
 ] [
-	str: c_s-afe_xorurl_base as handle! ref/value
+	str: c_s-afe_xorurl_base as int-ptr! ref
 
 	size: length? str
 	buffer: string/load str size UTF-8
@@ -134,20 +132,24 @@ comment {bg-end:s-afe_FIELD_STRING}
 
 comment {bg:s-afe_METHOD [
 	METHODNAME: "c-onnect"
+	RETURN: "Result<(), Error>"
+	RET_REF: " converted into handle!"
+	RET_RESULT: " unwrapped"
 ]}
 
 s-afe_c-onnect: function [
-	comment {bg:s-afe_c-onnect_SELF []} ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
+	comment {bg:s-afe_c-onnect_SELF []} ref [integer!] comment {bg-end:s-afe_c-onnect_SELF}
     comment {bg:s-afe_c-onnect_PARAM [
         PARAMNAME: "app-keypair"
         PARAMTYPE: "Option<Keypair>"
     ]} app-keypair			;; in rust: Option<Keypair>
     comment {bg-end:s-afe_c-onnect_PARAM}
+    ;; returns: Result<(), Error> unwrapped converted into handle!.
 ] [
 	params: to binary! ""
 	save/as
 		params
-		reduce [comment {bg:s-afe_c-onnect_PARAM [PARAMNAME: "app-keypair"]} app-keypair comment {bg-end:s-afe_c-onnect_PARAM}]
+		probe reduce [comment {bg:s-afe_c-onnect_PARAM [PARAMNAME: "app-keypair"]} app-keypair comment {bg-end:s-afe_c-onnect_PARAM}]
 		'redbin
 
 	probe length? params
@@ -155,23 +157,35 @@ s-afe_c-onnect: function [
 		comment {bg:s-afe_c-onnect_SELF []} ref comment {bg-end:s-afe_c-onnect_SELF}
 		probe params
 	result: probe load/as result_buf 'redbin
-	sn-ffi-result result
+	result: probe sn-ffi-result result
+	comment {bg:s-afe_c-onnect_RETURN_REF []}
+	result: to integer! at reverse result 5 comment {bg-end:s-afe_c-onnect_RETURN_REF}
 ]
 
 r_s-afe_c-onnect: routine [
-	comment {bg:s-afe_c-onnect_SELF []} ref [handle!] comment {bg-end:s-afe_c-onnect_SELF}
+	comment {bg:s-afe_c-onnect_SELF []} ref [integer!] comment {bg-end:s-afe_c-onnect_SELF}
 	params [binary!]
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
+	print [tokio_runtime "^/"]
+	comment {bg:s-afe_c-onnect_SELF []} print [as int-ptr! ref "^/"] comment {bg-end:s-afe_c-onnect_SELF}
+	print [binary/rs-head params "^/"]
+	print [binary/rs-length? params "^/"]
+
 	buffer: c_s-afe_c-onnect
-		tokio_runtime
-		comment {bg:s-afe_c-onnect_SELF []} as handle! ref/value comment {bg-end:s-afe_c-onnect_SELF}
+		tokio_runtime ;@@ TODO: async
+		comment {bg:s-afe_c-onnect_SELF []} as int-ptr! ref comment {bg-end:s-afe_c-onnect_SELF}
 		binary/rs-head params
 		binary/rs-length? params
+	print ["buffer: " buffer "^/"]
+	print ["buffer data: " buffer/data "^/"]
+	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	buffer_free as handle! buffer
+	print ["ret: " ret "^/"]
+
+	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
 ]
 comment {bg-end:s-afe_METHOD}
@@ -221,6 +235,7 @@ s-afe!: object [
 	
 	comment {bg:s-afe_METHOD [
 		METHODNAME: "c-onnect"
+		RETURN: "Result<(), Error>"
 	]}
 	c-onnect: function [
 	    comment {bg:s-afe_c-onnect_PARAM [
@@ -228,6 +243,7 @@ s-afe!: object [
 	        PARAMTYPE: "Option<Keypair>"
 	    ]} app-keypair			;; in rust: Option<Keypair>
 	    comment {bg-end:s-afe_c-onnect_PARAM}
+	    ;; returns: Result<(), Error>
 	] [
 		s-afe_c-onnect
 			comment {bg:s-afe_c-onnect_SELF []} ref comment {bg-end:s-afe_c-onnect_SELF}
@@ -240,3 +256,59 @@ s-afe!: object [
 comment {bg-end:OBJ}
 
 
+safe: object [
+	ref: none
+	test: none
+
+	
+	init: does [
+		probe "init"
+; 		ref: safe_default
+; 		print ref
+		test: null-handle
+		print test
+	]
+	
+	connect: function [
+	     peers			;; in rust: Vec<Multiaddr>
+	     add_network_peers			;; in rust: bool
+	     secret			;; in rust: Option<SecretKey>
+	    
+	    ;; returns: Result<(), Error>
+	] [
+		probe "connect"
+; 		print self/ref
+; 		print ref
+; 		print self/test
+		safe_connect
+; 			 self/ref 
+			 peers
+			 add_network_peers
+			 secret
+			 "TRACE"
+			
+	]
+
+]
+
+
+build-xorname: function [
+	from [word! binary! string!]	; use word `random as good practice
+	names [block!]					; block of strings and binaries
+	return: [binary!]				; xorname
+] [
+	builder-ref: switch type? from [
+		word! [ xornamebuilder_random ]
+		binary! [ xornamebuilder_from from ]
+		string! [ xornamebuilder_from_str from ]
+	]
+
+	foreach name names [
+		switch type? name [
+			binary! [ xornamebuilder_with_bytes builder-ref name ]
+			string! [ xornamebuilder_with_str builder-ref name ]
+		]
+	]
+
+	xornamebuilder_build builder-ref
+]

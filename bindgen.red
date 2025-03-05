@@ -415,10 +415,20 @@ generate-red: function [
 			foreach method-name sort keys-of struct/methods [
 				method: struct/methods/(method-name)
 				vars/METHODNAME: method-name
+				vars/RETURN: method/return
+				vars/RET_RESULT: to logic! find/match method/return "Result<"
+				vars/RET_REF: to logic! any [
+					find ref-types method/return
+					find ref-types result-value method/return
+				]
 
 				template-generate  tpl  rejoin [vars/NAME "_METHOD"]  delimiters  vars
 				if method/self [
 					template-generate  tpl  probe rejoin [vars/NAME "_" vars/METHODNAME "_SELF"]  delimiters  vars
+				]
+				if vars/RET_REF [
+					template-generate  tpl  rejoin [vars/NAME "_" vars/METHODNAME "_RETURN_REF"]
+						delimiters vars
 				]
 				
 				params: method/params

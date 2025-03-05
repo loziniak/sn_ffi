@@ -5,6 +5,7 @@
 
 use std::fmt;
 use std::ffi::{CString, c_char};
+use std::convert::TryInto;
 use tokio::runtime::Runtime;
 use redbin::{from_bytes as from_redbin, to_bytes as to_redbin};
 use serde::Serialize;
@@ -16,6 +17,7 @@ use sn_api::Safe;/*bg-end:API_IMPORT*/
 
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct Buffer {
 	data: *mut u8,
 	len: usize,
@@ -45,7 +47,7 @@ pub extern "C" fn s_afe_free(ptr: *mut Safe) {
         return;
     }
     unsafe {
-        Box::from_raw(ptr);
+        let _ = Box::from_raw(ptr);
     }
 }
 /*bg-end:OBJ_DEFAULT*/
@@ -81,13 +83,15 @@ pub extern "C" fn s_afe_connect(
 	/*bg:s_afe_connect_SELF []*/s_afe_ptr: *mut Safe,/*bg-end:s_afe_connect_SELF*/
 	params: *const u8,
 	params_size: usize,
-) -> Buffer {
-    println!("s_afe_connect pointer: {:?}, size: {:?}", params, params_size);
+) -> *mut Buffer {
+    /*bg:s_afe_connect_ASYNC []*/println!("rt_ptr: {:?}", rt_ptr);/*bg-end:s_afe_connect_ASYNC*/
+    /*bg:s_afe_connect_SELF []*/println!("s_afe_ptr: {:?}", s_afe_ptr);/*bg-end:s_afe_connect_SELF*/
+    println!("s_afe_connect params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
 
     /*bg:s_afe_connect_ASYNC []*/assert!(!rt_ptr.is_null());/*bg-end:s_afe_connect_ASYNC*/
     /*bg:s_afe_connect_SELF []*/assert!(!s_afe_ptr.is_null());/*bg-end:s_afe_connect_SELF*/
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size) };
+    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
     println!("s_afe_connect u8: {:?}", params);
 
     let params: (
@@ -123,7 +127,8 @@ pub extern "C" fn s_afe_connect(
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
-	return Buffer { data, len };
+
+	Box::into_raw(Box::new(Buffer { data, len }))
 }
 /*bg-end:METHOD*/
 
@@ -144,7 +149,13 @@ pub extern "C" fn cstring_free(cstring: *mut c_char) {
 }
 
 #[no_mangle]
-pub extern "C" fn buffer_free(buf: Buffer) {
+pub extern "C" fn buffer_free(buf: *mut Buffer) {
+	let buf = unsafe {
+		assert!(!buf.is_null());
+		&mut *buf
+	};
+	println!("buffer_free buf: {:?}", buf);
+
 	let b: &mut [u8] = unsafe { std::slice::from_raw_parts_mut(buf.data, buf.len) };
 	unsafe {
 		let _ = Box::from_raw(b.as_mut_ptr());
