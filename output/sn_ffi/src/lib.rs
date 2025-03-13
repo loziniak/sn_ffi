@@ -35,6 +35,27 @@ impl fmt::Debug for ErrorString {
 
 
 
+#[no_mangle]
+pub extern "C" fn safe_free(ptr: *mut Safe) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe {
+        let _ = Box::from_raw(ptr);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn xornamebuilder_free(ptr: *mut XorNameBuilder) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe {
+        let _ = Box::from_raw(ptr);
+    }
+}
+
+
 
 
 

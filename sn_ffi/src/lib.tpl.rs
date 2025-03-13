@@ -41,6 +41,11 @@ pub extern "C" fn s_afe_default() -> *mut Safe {
     Box::into_raw(Box::new(Safe::default()))
 }
 
+/*bg-end:OBJ_DEFAULT*/
+/*bg:OBJ [
+    NAME: "Safe"
+    LOWNAME: "s_afe"
+]*/
 #[no_mangle]
 pub extern "C" fn s_afe_free(ptr: *mut Safe) {
     if ptr.is_null() {
@@ -50,7 +55,7 @@ pub extern "C" fn s_afe_free(ptr: *mut Safe) {
         let _ = Box::from_raw(ptr);
     }
 }
-/*bg-end:OBJ_DEFAULT*/
+/*bg-end:OBJ*/
 
 
 /*bg:FIELD_STRING [

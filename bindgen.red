@@ -303,6 +303,7 @@ generate-rust: function [
 		unless struct/empty? [
 			vars/NAME: struct-name
 			vars/LOWNAME: lowercase to string! vars/NAME
+			template-generate tpl "OBJ" delimiters vars
 	
 			vars/MOD: copy ""
 			foreach m struct/mod [
@@ -408,13 +409,14 @@ generate-red: function [
 	
 			foreach field-name sort keys-of struct/string-fields [
 				vars/FIELDNAME: field-name
-				vars/FIELDNAME_DASH: replace to string! field-name #"_" #"-"
+				vars/FIELDNAME_DASH: replace/all to-string field-name #"_" #"-"
 				template-generate  tpl  rejoin [vars/NAME "_FIELD_STRING"]  delimiters  vars
 			]
 
 			foreach method-name sort keys-of struct/methods [
 				method: struct/methods/(method-name)
 				vars/METHODNAME: method-name
+				vars/KEBAB_METHODNAME: replace/all to-string method-name #"_" #"-"
 				vars/RETURN: method/return
 				vars/RET_RESULT: to logic! find/match method/return "Result<"
 				vars/RET_REF: to logic! any [
@@ -423,8 +425,12 @@ generate-red: function [
 				]
 
 				template-generate  tpl  rejoin [vars/NAME "_METHOD"]  delimiters  vars
+				if method/async [
+					template-generate tpl rejoin [vars/NAME "_" vars/METHODNAME "_ASYNC"]
+						delimiters vars
+				]
 				if method/self [
-					template-generate  tpl  probe rejoin [vars/NAME "_" vars/METHODNAME "_SELF"]  delimiters  vars
+					template-generate  tpl  rejoin [vars/NAME "_" vars/METHODNAME "_SELF"]  delimiters  vars
 				]
 				if vars/RET_REF [
 					template-generate  tpl  rejoin [vars/NAME "_" vars/METHODNAME "_RETURN_REF"]

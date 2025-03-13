@@ -23,10 +23,10 @@ comment {bg:OBJ [
 				return: [int-ptr!]
 			]
 
+	comment {bg-end:s-afe_OBJ_DEFAULT}
 			c_s-afe_free: "s-afe_free" [
 				ref [int-ptr!]
 			]
-	comment {bg-end:s-afe_OBJ_DEFAULT}
 
 	comment {bg:s-afe_FIELD_STRING [
 		FIELDNAME: "xorurl_base"
@@ -42,7 +42,7 @@ comment {bg:OBJ [
 		METHODNAME: "c-onnect"
 	]}
 			c_s-afe_c-onnect: "s-afe_c-onnect" [
-				rt [int-ptr!] ;@@ TODO: async
+				comment {bg:s-afe_c-onnect_ASYNC []} rt [int-ptr!] comment {bg-end:s-afe_c-onnect_ASYNC}
 				comment {bg:s-afe_c-onnect_SELF []} ref [int-ptr!] comment {bg-end:s-afe_c-onnect_SELF}
 				params [byte-ptr!]
 				params_size [integer!]
@@ -102,13 +102,13 @@ s-afe_default: routine [
 ] [
 	integer/box as integer! c_s-afe_default
 ]
+comment {bg-end:s-afe_OBJ_DEFAULT}
 
 s-afe_free: routine [
 	ref [integer!]
 ] [
-	c_s-afe_free ref
+	c_s-afe_free as int-ptr! ref
 ]
-comment {bg-end:s-afe_OBJ_DEFAULT}
 
 comment {bg:s-afe_FIELD_STRING [
 	FIELDNAME: "xorurl_base"
@@ -132,19 +132,20 @@ comment {bg-end:s-afe_FIELD_STRING}
 
 comment {bg:s-afe_METHOD [
 	METHODNAME: "c-onnect"
+	KEBAB_METHODNAME: "c-on-nect"
 	RETURN: "Result<(), Error>"
-	RET_REF: " converted into handle!"
+	RET_REF: " converted into integer!"
 	RET_RESULT: " unwrapped"
 ]}
 
-s-afe_c-onnect: function [
+s-afe-c-on-nect: function [
 	comment {bg:s-afe_c-onnect_SELF []} ref [integer!] comment {bg-end:s-afe_c-onnect_SELF}
     comment {bg:s-afe_c-onnect_PARAM [
         PARAMNAME: "app-keypair"
         PARAMTYPE: "Option<Keypair>"
     ]} app-keypair			;; in rust: Option<Keypair>
     comment {bg-end:s-afe_c-onnect_PARAM}
-    ;; returns: Result<(), Error> unwrapped converted into handle!.
+    ;; returns: Result<(), Error> unwrapped converted into integer!.
 ] [
 	params: to binary! ""
 	save/as
@@ -153,13 +154,13 @@ s-afe_c-onnect: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_s-afe_c-onnect
+	probe result-buf: r_s-afe_c-onnect
 		comment {bg:s-afe_c-onnect_SELF []} ref comment {bg-end:s-afe_c-onnect_SELF}
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	comment {bg:s-afe_c-onnect_RETURN_REF []}
-	result: to integer! at reverse result 5 comment {bg-end:s-afe_c-onnect_RETURN_REF}
+	to integer! skip reverse result 4 comment {bg-end:s-afe_c-onnect_RETURN_REF}
 ]
 
 r_s-afe_c-onnect: routine [
@@ -168,13 +169,13 @@ r_s-afe_c-onnect: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	comment {bg:s-afe_c-onnect_ASYNC []} print [tokio_runtime "^/"] comment {bg-end:s-afe_c-onnect_ASYNC}
 	comment {bg:s-afe_c-onnect_SELF []} print [as int-ptr! ref "^/"] comment {bg-end:s-afe_c-onnect_SELF}
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_s-afe_c-onnect
-		tokio_runtime ;@@ TODO: async
+		comment {bg:s-afe_c-onnect_ASYNC []} tokio_runtime comment {bg-end:s-afe_c-onnect_ASYNC}
 		comment {bg:s-afe_c-onnect_SELF []} as int-ptr! ref comment {bg-end:s-afe_c-onnect_SELF}
 		binary/rs-head params
 		binary/rs-length? params
@@ -218,11 +219,11 @@ s-afe!: object [
 		ref: s-afe_default
 	]
 
+	comment {bg-end:s-afe_OBJ_DEFAULT}
 	free: does [
 		s-afe_free ref
 		ref: none
 	]
-	comment {bg-end:s-afe_OBJ_DEFAULT}
 
 	comment {bg:s-afe_FIELD_STRING [
 		FIELDNAME: "xorurl_base"
@@ -235,9 +236,10 @@ s-afe!: object [
 	
 	comment {bg:s-afe_METHOD [
 		METHODNAME: "c-onnect"
+		KEBAB_METHODNAME: "c-on-nect"
 		RETURN: "Result<(), Error>"
 	]}
-	c-onnect: function [
+	c-on-nect: function [
 	    comment {bg:s-afe_c-onnect_PARAM [
 	        PARAMNAME: "app-keypair"
 	        PARAMTYPE: "Option<Keypair>"
@@ -245,7 +247,7 @@ s-afe!: object [
 	    comment {bg-end:s-afe_c-onnect_PARAM}
 	    ;; returns: Result<(), Error>
 	] [
-		s-afe_c-onnect
+		comment {bg:s-afe_c-onnect_RETURN_REF []}self/ref: comment {bg-end:s-afe_c-onnect_RETURN_REF}s-afe-c-on-nect
 			comment {bg:s-afe_c-onnect_SELF []} ref comment {bg-end:s-afe_c-onnect_SELF}
 			comment {bg:s-afe_c-onnect_PARAM [PARAMNAME: "app-keypair"]} app-keypair
 			comment {bg-end:s-afe_c-onnect_PARAM}
@@ -256,59 +258,23 @@ s-afe!: object [
 comment {bg-end:OBJ}
 
 
-safe: object [
-	ref: none
-	test: none
-
-	
-	init: does [
-		probe "init"
-; 		ref: safe_default
-; 		print ref
-		test: null-handle
-		print test
-	]
-	
-	connect: function [
-	     peers			;; in rust: Vec<Multiaddr>
-	     add_network_peers			;; in rust: bool
-	     secret			;; in rust: Option<SecretKey>
-	    
-	    ;; returns: Result<(), Error>
-	] [
-		probe "connect"
-; 		print self/ref
-; 		print ref
-; 		print self/test
-		safe_connect
-; 			 self/ref 
-			 peers
-			 add_network_peers
-			 secret
-			 "TRACE"
-			
-	]
-
-]
-
-
 build-xorname: function [
 	from [word! binary! string!]	; use word `random as good practice
 	names [block!]					; block of strings and binaries
 	return: [binary!]				; xorname
 ] [
 	builder-ref: switch type? from [
-		word! [ xornamebuilder_random ]
-		binary! [ xornamebuilder_from from ]
-		string! [ xornamebuilder_from_str from ]
+		word! [ xornamebuilder-random ]
+		binary! [ xornamebuilder-from from ]
+		string! [ xornamebuilder-from-str from ]
 	]
 
 	foreach name names [
 		switch type? name [
-			binary! [ xornamebuilder_with_bytes builder-ref name ]
-			string! [ xornamebuilder_with_str builder-ref name ]
+			binary! [ xornamebuilder-with-bytes builder-ref name ]
+			string! [ xornamebuilder-with-str builder-ref name ]
 		]
 	]
 
-	xornamebuilder_build builder-ref
+	xornamebuilder-build builder-ref
 ]

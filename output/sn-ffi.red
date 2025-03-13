@@ -17,12 +17,15 @@ Red [
 
 
 	
+			c_safe_free: "safe_free" [
+				ref [int-ptr!]
+			]
 
 	
 
 	
 			c_safe_address: "safe_address" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -30,7 +33,7 @@ Red [
 			]
 	
 			c_safe_balance: "safe_balance" [
-				rt [int-ptr!] ;@@ TODO: async
+				 rt [int-ptr!] 
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -38,7 +41,7 @@ Red [
 			]
 	
 			c_safe_connect: "safe_connect" [
-				rt [int-ptr!] ;@@ TODO: async
+				 rt [int-ptr!] 
 				
 				params [byte-ptr!]
 				params_size [integer!]
@@ -46,7 +49,7 @@ Red [
 			]
 	
 			c_safe_download: "safe_download" [
-				rt [int-ptr!] ;@@ TODO: async
+				 rt [int-ptr!] 
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -54,7 +57,7 @@ Red [
 			]
 	
 			c_safe_login: "safe_login" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -62,7 +65,7 @@ Red [
 			]
 	
 			c_safe_login_with_eth: "safe_login_with_eth" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -70,7 +73,7 @@ Red [
 			]
 	
 			c_safe_log_level: "safe_log_level" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -78,7 +81,7 @@ Red [
 			]
 	
 			c_safe_read_reg: "safe_read_reg" [
-				rt [int-ptr!] ;@@ TODO: async
+				 rt [int-ptr!] 
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -86,7 +89,7 @@ Red [
 			]
 	
 			c_safe_reg_create: "safe_reg_create" [
-				rt [int-ptr!] ;@@ TODO: async
+				 rt [int-ptr!] 
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -94,7 +97,7 @@ Red [
 			]
 	
 			c_safe_reg_write: "safe_reg_write" [
-				rt [int-ptr!] ;@@ TODO: async
+				 rt [int-ptr!] 
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -102,7 +105,7 @@ Red [
 			]
 	
 			c_safe_upload: "safe_upload" [
-				rt [int-ptr!] ;@@ TODO: async
+				 rt [int-ptr!] 
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -113,12 +116,15 @@ Red [
 
 
 	
+			c_xornamebuilder_free: "xornamebuilder_free" [
+				ref [int-ptr!]
+			]
 
 	
 
 	
 			c_xornamebuilder_build: "xornamebuilder_build" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -126,7 +132,7 @@ Red [
 			]
 	
 			c_xornamebuilder_from: "xornamebuilder_from" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				
 				params [byte-ptr!]
 				params_size [integer!]
@@ -134,7 +140,7 @@ Red [
 			]
 	
 			c_xornamebuilder_from_str: "xornamebuilder_from_str" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				
 				params [byte-ptr!]
 				params_size [integer!]
@@ -142,7 +148,7 @@ Red [
 			]
 	
 			c_xornamebuilder_random: "xornamebuilder_random" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				
 				params [byte-ptr!]
 				params_size [integer!]
@@ -150,7 +156,7 @@ Red [
 			]
 	
 			c_xornamebuilder_with_bytes: "xornamebuilder_with_bytes" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -158,7 +164,7 @@ Red [
 			]
 	
 			c_xornamebuilder_with_str: "xornamebuilder_with_str" [
-				rt [int-ptr!] ;@@ TODO: async
+				
 				 ref [int-ptr!] 
 				params [byte-ptr!]
 				params_size [integer!]
@@ -212,11 +218,17 @@ sn-ffi-result: function [v] [		;; unwrap() in Rust's terms
 
 
 
+safe_free: routine [
+	ref [integer!]
+] [
+	c_safe_free as int-ptr! ref
+]
 
 
 
 
-safe_address: function [
+
+safe-address: function [
 	 ref [integer!] 
     
     ;; returns: Result<EvmAddress, Error> unwrapped.
@@ -228,10 +240,10 @@ safe_address: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_address
+	probe result-buf: r_safe_address
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -242,13 +254,13 @@ r_safe_address: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_address
-		tokio_runtime ;@@ TODO: async
+		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -264,7 +276,7 @@ r_safe_address: routine [
 ]
 
 
-safe_balance: function [
+safe-balance: function [
 	 ref [integer!] 
     
     ;; returns: Result<(U256, U256), Error> unwrapped.
@@ -276,10 +288,10 @@ safe_balance: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_balance
+	probe result-buf: r_safe_balance
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -290,13 +302,13 @@ r_safe_balance: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	 print [tokio_runtime "^/"] 
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_balance
-		tokio_runtime ;@@ TODO: async
+		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -312,14 +324,14 @@ r_safe_balance: routine [
 ]
 
 
-safe_connect: function [
+safe-connect: function [
 	
      peers			;; in rust: Vec<Multiaddr>
      add_network_peers			;; in rust: bool
      secret			;; in rust: Option<SecretKey>
      log_level			;; in rust: String
     
-    ;; returns: Result<Safe, Error> unwrapped converted into handle!.
+    ;; returns: Result<Safe, Error> unwrapped converted into integer!.
 ] [
 	params: to binary! ""
 	save/as
@@ -328,13 +340,13 @@ safe_connect: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_connect
+	probe result-buf: r_safe_connect
 		
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
-	result: to integer! at reverse result 5 
+	to integer! skip reverse result 4 
 ]
 
 r_safe_connect: routine [
@@ -343,13 +355,13 @@ r_safe_connect: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	 print [tokio_runtime "^/"] 
 	
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_connect
-		tokio_runtime ;@@ TODO: async
+		 tokio_runtime 
 		
 		binary/rs-head params
 		binary/rs-length? params
@@ -365,7 +377,7 @@ r_safe_connect: routine [
 ]
 
 
-safe_download: function [
+safe-download: function [
 	 ref [integer!] 
      xorname			;; in rust: XorName
     
@@ -378,10 +390,10 @@ safe_download: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_download
+	probe result-buf: r_safe_download
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -392,13 +404,13 @@ r_safe_download: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	 print [tokio_runtime "^/"] 
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_download
-		tokio_runtime ;@@ TODO: async
+		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -414,7 +426,7 @@ r_safe_download: routine [
 ]
 
 
-safe_login: function [
+safe-login: function [
 	 ref [integer!] 
      secret			;; in rust: Option<SecretKey>
     
@@ -427,10 +439,10 @@ safe_login: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_login
+	probe result-buf: r_safe_login
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -441,13 +453,13 @@ r_safe_login: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_login
-		tokio_runtime ;@@ TODO: async
+		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -463,7 +475,7 @@ r_safe_login: routine [
 ]
 
 
-safe_login_with_eth: function [
+safe-login-with-eth: function [
 	 ref [integer!] 
      eth_privkey			;; in rust: Option<String>
     
@@ -476,10 +488,10 @@ safe_login_with_eth: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_login_with_eth
+	probe result-buf: r_safe_login_with_eth
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -490,13 +502,13 @@ r_safe_login_with_eth: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_login_with_eth
-		tokio_runtime ;@@ TODO: async
+		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -512,7 +524,7 @@ r_safe_login_with_eth: routine [
 ]
 
 
-safe_log_level: function [
+safe-log-level: function [
 	 ref [integer!] 
      level			;; in rust: String
     
@@ -525,10 +537,10 @@ safe_log_level: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_log_level
+	probe result-buf: r_safe_log_level
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -539,13 +551,13 @@ r_safe_log_level: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_log_level
-		tokio_runtime ;@@ TODO: async
+		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -561,7 +573,7 @@ r_safe_log_level: routine [
 ]
 
 
-safe_read_reg: function [
+safe-read-reg: function [
 	 ref [integer!] 
      meta			;; in rust: &XorName
      version			;; in rust: Option<u32>
@@ -575,10 +587,10 @@ safe_read_reg: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_read_reg
+	probe result-buf: r_safe_read_reg
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -589,13 +601,13 @@ r_safe_read_reg: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	 print [tokio_runtime "^/"] 
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_read_reg
-		tokio_runtime ;@@ TODO: async
+		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -611,7 +623,7 @@ r_safe_read_reg: routine [
 ]
 
 
-safe_reg_create: function [
+safe-reg-create: function [
 	 ref [integer!] 
      data			;; in rust: &[u8]
      meta			;; in rust: &XorName
@@ -625,10 +637,10 @@ safe_reg_create: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_reg_create
+	probe result-buf: r_safe_reg_create
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -639,13 +651,13 @@ r_safe_reg_create: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	 print [tokio_runtime "^/"] 
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_reg_create
-		tokio_runtime ;@@ TODO: async
+		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -661,7 +673,7 @@ r_safe_reg_create: routine [
 ]
 
 
-safe_reg_write: function [
+safe-reg-write: function [
 	 ref [integer!] 
      data			;; in rust: &[u8]
      meta			;; in rust: &XorName
@@ -675,10 +687,10 @@ safe_reg_write: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_reg_write
+	probe result-buf: r_safe_reg_write
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -689,13 +701,13 @@ r_safe_reg_write: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	 print [tokio_runtime "^/"] 
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_reg_write
-		tokio_runtime ;@@ TODO: async
+		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -711,7 +723,7 @@ r_safe_reg_write: routine [
 ]
 
 
-safe_upload: function [
+safe-upload: function [
 	 ref [integer!] 
      data			;; in rust: &[u8]
     
@@ -724,10 +736,10 @@ safe_upload: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_safe_upload
+	probe result-buf: r_safe_upload
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -738,13 +750,13 @@ r_safe_upload: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	 print [tokio_runtime "^/"] 
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_safe_upload
-		tokio_runtime ;@@ TODO: async
+		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -764,11 +776,17 @@ r_safe_upload: routine [
 
 
 
+xornamebuilder_free: routine [
+	ref [integer!]
+] [
+	c_xornamebuilder_free as int-ptr! ref
+]
 
 
 
 
-xornamebuilder_build: function [
+
+xornamebuilder-build: function [
 	 ref [integer!] 
     
     ;; returns: XorName.
@@ -780,10 +798,10 @@ xornamebuilder_build: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_xornamebuilder_build
+	probe result-buf: r_xornamebuilder_build
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
 ]
@@ -794,13 +812,13 @@ r_xornamebuilder_build: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_xornamebuilder_build
-		tokio_runtime ;@@ TODO: async
+		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -816,11 +834,11 @@ r_xornamebuilder_build: routine [
 ]
 
 
-xornamebuilder_from: function [
+xornamebuilder-from: function [
 	
      xor_name			;; in rust: &XorName
     
-    ;; returns: XorNameBuilder converted into handle!.
+    ;; returns: XorNameBuilder converted into integer!.
 ] [
 	params: to binary! ""
 	save/as
@@ -829,13 +847,13 @@ xornamebuilder_from: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_xornamebuilder_from
+	probe result-buf: r_xornamebuilder_from
 		
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
-	result: to integer! at reverse result 5 
+	to integer! skip reverse result 4 
 ]
 
 r_xornamebuilder_from: routine [
@@ -844,13 +862,13 @@ r_xornamebuilder_from: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_xornamebuilder_from
-		tokio_runtime ;@@ TODO: async
+		
 		
 		binary/rs-head params
 		binary/rs-length? params
@@ -866,11 +884,11 @@ r_xornamebuilder_from: routine [
 ]
 
 
-xornamebuilder_from_str: function [
+xornamebuilder-from-str: function [
 	
      name			;; in rust: &str
     
-    ;; returns: XorNameBuilder converted into handle!.
+    ;; returns: XorNameBuilder converted into integer!.
 ] [
 	params: to binary! ""
 	save/as
@@ -879,13 +897,13 @@ xornamebuilder_from_str: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_xornamebuilder_from_str
+	probe result-buf: r_xornamebuilder_from_str
 		
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
-	result: to integer! at reverse result 5 
+	to integer! skip reverse result 4 
 ]
 
 r_xornamebuilder_from_str: routine [
@@ -894,13 +912,13 @@ r_xornamebuilder_from_str: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_xornamebuilder_from_str
-		tokio_runtime ;@@ TODO: async
+		
 		
 		binary/rs-head params
 		binary/rs-length? params
@@ -916,10 +934,10 @@ r_xornamebuilder_from_str: routine [
 ]
 
 
-xornamebuilder_random: function [
+xornamebuilder-random: function [
 	
     
-    ;; returns: XorNameBuilder converted into handle!.
+    ;; returns: XorNameBuilder converted into integer!.
 ] [
 	params: to binary! ""
 	save/as
@@ -928,13 +946,13 @@ xornamebuilder_random: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_xornamebuilder_random
+	probe result-buf: r_xornamebuilder_random
 		
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
-	result: to integer! at reverse result 5 
+	to integer! skip reverse result 4 
 ]
 
 r_xornamebuilder_random: routine [
@@ -943,13 +961,13 @@ r_xornamebuilder_random: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_xornamebuilder_random
-		tokio_runtime ;@@ TODO: async
+		
 		
 		binary/rs-head params
 		binary/rs-length? params
@@ -965,11 +983,11 @@ r_xornamebuilder_random: routine [
 ]
 
 
-xornamebuilder_with_bytes: function [
+xornamebuilder-with-bytes: function [
 	 ref [integer!] 
      name			;; in rust: &[u8]
     
-    ;; returns: XorNameBuilder converted into handle!.
+    ;; returns: XorNameBuilder converted into integer!.
 ] [
 	params: to binary! ""
 	save/as
@@ -978,13 +996,13 @@ xornamebuilder_with_bytes: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_xornamebuilder_with_bytes
+	probe result-buf: r_xornamebuilder_with_bytes
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
-	result: to integer! at reverse result 5 
+	to integer! skip reverse result 4 
 ]
 
 r_xornamebuilder_with_bytes: routine [
@@ -993,13 +1011,13 @@ r_xornamebuilder_with_bytes: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_xornamebuilder_with_bytes
-		tokio_runtime ;@@ TODO: async
+		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -1015,11 +1033,11 @@ r_xornamebuilder_with_bytes: routine [
 ]
 
 
-xornamebuilder_with_str: function [
+xornamebuilder-with-str: function [
 	 ref [integer!] 
      name			;; in rust: &str
     
-    ;; returns: XorNameBuilder converted into handle!.
+    ;; returns: XorNameBuilder converted into integer!.
 ] [
 	params: to binary! ""
 	save/as
@@ -1028,13 +1046,13 @@ xornamebuilder_with_str: function [
 		'redbin
 
 	probe length? params
-	probe result_buf: r_xornamebuilder_with_str
+	probe result-buf: r_xornamebuilder_with_str
 		 ref 
 		probe params
-	result: probe load/as result_buf 'redbin
+	result: probe load/as result-buf 'redbin
 	result: probe sn-ffi-result result
 	
-	result: to integer! at reverse result 5 
+	to integer! skip reverse result 4 
 ]
 
 r_xornamebuilder_with_str: routine [
@@ -1043,13 +1061,13 @@ r_xornamebuilder_with_str: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	print [tokio_runtime "^/"]
+	
 	 print [as int-ptr! ref "^/"] 
 	print [binary/rs-head params "^/"]
 	print [binary/rs-length? params "^/"]
 
 	buffer: c_xornamebuilder_with_str
-		tokio_runtime ;@@ TODO: async
+		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
@@ -1087,6 +1105,10 @@ safe!: object [
 	ref: none
 
 	
+	free: does [
+		safe_free ref
+		ref: none
+	]
 
 	
 	
@@ -1095,7 +1117,7 @@ safe!: object [
 	    
 	    ;; returns: Result<EvmAddress, Error>
 	] [
-		safe_address
+		safe-address
 			 ref 
 			
 	]
@@ -1104,7 +1126,7 @@ safe!: object [
 	    
 	    ;; returns: Result<(U256, U256), Error>
 	] [
-		safe_balance
+		safe-balance
 			 ref 
 			
 	]
@@ -1117,7 +1139,7 @@ safe!: object [
 	    
 	    ;; returns: Result<Safe, Error>
 	] [
-		safe_connect
+		self/ref: safe-connect
 			
 			 peers
 			 add_network_peers
@@ -1131,7 +1153,7 @@ safe!: object [
 	    
 	    ;; returns: Result<Vec<u8>, Error>
 	] [
-		safe_download
+		safe-download
 			 ref 
 			 xorname
 			
@@ -1142,67 +1164,67 @@ safe!: object [
 	    
 	    ;; returns: Result<(), Error>
 	] [
-		safe_login
+		safe-login
 			 ref 
 			 secret
 			
 	]
 	
-	login_with_eth: function [
+	login-with-eth: function [
 	     eth_privkey			;; in rust: Option<String>
 	    
 	    ;; returns: Result<(), Error>
 	] [
-		safe_login_with_eth
+		safe-login-with-eth
 			 ref 
 			 eth_privkey
 			
 	]
 	
-	log_level: function [
+	log-level: function [
 	     level			;; in rust: String
 	    
 	    ;; returns: Result<(), Error>
 	] [
-		safe_log_level
+		safe-log-level
 			 ref 
 			 level
 			
 	]
 	
-	read_reg: function [
+	read-reg: function [
 	     meta			;; in rust: &XorName
 	     version			;; in rust: Option<u32>
 	    
 	    ;; returns: Result<Vec<u8>, Error>
 	] [
-		safe_read_reg
+		safe-read-reg
 			 ref 
 			 meta
 			 version
 			
 	]
 	
-	reg_create: function [
+	reg-create: function [
 	     data			;; in rust: &[u8]
 	     meta			;; in rust: &XorName
 	    
 	    ;; returns: Result<(), Error>
 	] [
-		safe_reg_create
+		safe-reg-create
 			 ref 
 			 data
 			 meta
 			
 	]
 	
-	reg_write: function [
+	reg-write: function [
 	     data			;; in rust: &[u8]
 	     meta			;; in rust: &XorName
 	    
 	    ;; returns: Result<(), Error>
 	] [
-		safe_reg_write
+		safe-reg-write
 			 ref 
 			 data
 			 meta
@@ -1214,7 +1236,7 @@ safe!: object [
 	    
 	    ;; returns: Result<XorName, Error>
 	] [
-		safe_upload
+		safe-upload
 			 ref 
 			 data
 			
@@ -1227,6 +1249,10 @@ xornamebuilder!: object [
 	ref: none
 
 	
+	free: does [
+		xornamebuilder_free ref
+		ref: none
+	]
 
 	
 	
@@ -1235,7 +1261,7 @@ xornamebuilder!: object [
 	    
 	    ;; returns: XorName
 	] [
-		xornamebuilder_build
+		xornamebuilder-build
 			 ref 
 			
 	]
@@ -1245,18 +1271,18 @@ xornamebuilder!: object [
 	    
 	    ;; returns: XorNameBuilder
 	] [
-		xornamebuilder_from
+		self/ref: xornamebuilder-from
 			
 			 xor_name
 			
 	]
 	
-	from_str: function [
+	from-str: function [
 	     name			;; in rust: &str
 	    
 	    ;; returns: XorNameBuilder
 	] [
-		xornamebuilder_from_str
+		self/ref: xornamebuilder-from-str
 			
 			 name
 			
@@ -1266,28 +1292,28 @@ xornamebuilder!: object [
 	    
 	    ;; returns: XorNameBuilder
 	] [
-		xornamebuilder_random
+		self/ref: xornamebuilder-random
 			
 			
 	]
 	
-	with_bytes: function [
+	with-bytes: function [
 	     name			;; in rust: &[u8]
 	    
 	    ;; returns: XorNameBuilder
 	] [
-		xornamebuilder_with_bytes
+		self/ref: xornamebuilder-with-bytes
 			 ref 
 			 name
 			
 	]
 	
-	with_str: function [
+	with-str: function [
 	     name			;; in rust: &str
 	    
 	    ;; returns: XorNameBuilder
 	] [
-		xornamebuilder_with_str
+		self/ref: xornamebuilder-with-str
 			 ref 
 			 name
 			
@@ -1296,42 +1322,6 @@ xornamebuilder!: object [
 
 ]
 
-
-
-safe: object [
-	ref: none
-	test: none
-
-	
-	init: does [
-		probe "init"
-; 		ref: safe_default
-; 		print ref
-		test: null-handle
-		print test
-	]
-	
-	connect: function [
-	     peers			;; in rust: Vec<Multiaddr>
-	     add_network_peers			;; in rust: bool
-	     secret			;; in rust: Option<SecretKey>
-	    
-	    ;; returns: Result<(), Error>
-	] [
-		probe "connect"
-; 		print self/ref
-; 		print ref
-; 		print self/test
-		safe_connect
-; 			 self/ref 
-			 peers
-			 add_network_peers
-			 secret
-			 "TRACE"
-			
-	]
-
-]
 
 
 build-xorname: function [
@@ -1340,17 +1330,17 @@ build-xorname: function [
 	return: [binary!]				; xorname
 ] [
 	builder-ref: switch type? from [
-		word! [ xornamebuilder_random ]
-		binary! [ xornamebuilder_from from ]
-		string! [ xornamebuilder_from_str from ]
+		word! [ xornamebuilder-random ]
+		binary! [ xornamebuilder-from from ]
+		string! [ xornamebuilder-from-str from ]
 	]
 
 	foreach name names [
 		switch type? name [
-			binary! [ xornamebuilder_with_bytes builder-ref name ]
-			string! [ xornamebuilder_with_str builder-ref name ]
+			binary! [ xornamebuilder-with-bytes builder-ref name ]
+			string! [ xornamebuilder-with-str builder-ref name ]
 		]
 	]
 
-	xornamebuilder_build builder-ref
+	xornamebuilder-build builder-ref
 ]
