@@ -89,33 +89,27 @@ pub extern "C" fn s_afe_connect(
 	params: *const u8,
 	params_size: usize,
 ) -> *mut Buffer {
-    /*bg:s_afe_connect_ASYNC []*/println!("rt_ptr: {:?}", rt_ptr);/*bg-end:s_afe_connect_ASYNC*/
-    /*bg:s_afe_connect_SELF []*/println!("s_afe_ptr: {:?}", s_afe_ptr);/*bg-end:s_afe_connect_SELF*/
-    println!("s_afe_connect params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
     /*bg:s_afe_connect_ASYNC []*/assert!(!rt_ptr.is_null());/*bg-end:s_afe_connect_ASYNC*/
     /*bg:s_afe_connect_SELF []*/assert!(!s_afe_ptr.is_null());/*bg-end:s_afe_connect_SELF*/
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("s_afe_connect u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     /*bg:s_afe_connect_PARAM [
         PARAMNAME: "app_keypair"
         PARAMTYPE: "Option<Keypair>"
     ]*/
         Option<Keypair>, // app_keypair /*bg-end:s_afe_connect_PARAM*/
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("s_afe_connect params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<(), Error>
-        /*bg:s_afe_connect_SELF [ SELF_PTR: "&mut " ]*/let s_afe = &mut std::ptr::read(s_afe_ptr);/*bg-end:s_afe_connect_SELF*/
+        /*bg:s_afe_connect_SELF [ SELF_PTR: "&mut " ]*/let s_afe = &mut *s_afe_ptr;/*bg-end:s_afe_connect_SELF*/
         /*bg:s_afe_connect_ASYNC []*/
         let rt = &mut *rt_ptr;
-        rt.block_on(/*bg-end:s_afe_connect_ASYNC*/
-        	Safe::connect(/*bg:s_afe_connect_SELF []*/s_afe/*bg-end:s_afe_connect_SELF*//*bg:s_afe_connect_PARAM [PARAMNUM: "0" COMMA: ", " BORROW: "&"]*/, &params.0/*bg-end:s_afe_connect_PARAM*/)
+        rt.block_on({/*bg-end:s_afe_connect_ASYNC*/
+        	Safe::connect(/*bg:s_afe_connect_SELF []*/s_afe/*bg-end:s_afe_connect_SELF*//*bg:s_afe_connect_PARAM [PARAMNUM: "0" COMMA: ", " BORROW: "&"]*/, &params_de.0/*bg-end:s_afe_connect_PARAM*/)
         /*bg:s_afe_connect_ASYNC []*/
-        )/*bg-end:s_afe_connect_ASYNC*/
+        })/*bg-end:s_afe_connect_ASYNC*/
     };
     /*bg:s_afe_connect_RETURN_RESULT []*/
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
@@ -126,9 +120,7 @@ pub extern "C" fn s_afe_connect(
     /*bg:s_afe_connect_RETURN_REF []*/
     let ret: usize = Box::into_raw(Box::new(ret)) as usize;
     /*bg-end:s_afe_connect_RETURN_REF*/
-    println!("s_afe_connect ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("s_afe_connect ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -159,7 +151,6 @@ pub extern "C" fn buffer_free(buf: *mut Buffer) {
 		assert!(!buf.is_null());
 		&mut *buf
 	};
-	println!("buffer_free buf: {:?}", buf);
 
 	let b: &mut [u8] = unsafe { std::slice::from_raw_parts_mut(buf.data, buf.len) };
 	unsafe {

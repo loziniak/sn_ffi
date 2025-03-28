@@ -1,6 +1,9 @@
 Red []
 
+recycle/off
+
 #include %output/sn-ffi.red
+#include %sn-ffi-utils.red
 
 safe: make safe! []
 
@@ -17,7 +20,12 @@ probe safe/connect
 	"INFO"
 
 print "^/^/^/"
-
 safe/login-with-eth "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+
+print "^/^/^/"
+probe safe/address
+
+print "^/^/^/"
+probe u256-to-float second safe/balance
 
 safe/free

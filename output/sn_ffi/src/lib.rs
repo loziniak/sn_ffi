@@ -14,7 +14,6 @@ use safe::{SecretKey, Multiaddr, XorName};
 
 
 use safe::Safe;
-use safe::registers::XorNameBuilder;
 
 
 #[repr(C)]
@@ -45,16 +44,6 @@ pub extern "C" fn safe_free(ptr: *mut Safe) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn xornamebuilder_free(ptr: *mut XorNameBuilder) {
-    if ptr.is_null() {
-        return;
-    }
-    unsafe {
-        let _ = Box::from_raw(ptr);
-    }
-}
-
 
 
 
@@ -69,22 +58,16 @@ pub extern "C" fn safe_address(
 	params_size: usize,
 ) -> *mut Buffer {
     
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_address params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_address u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_address params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<EvmAddress, Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
         	Safe::address(safe)
         
@@ -94,9 +77,7 @@ pub extern "C" fn safe_address(
     
     
     
-    println!("safe_address ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_address ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -111,38 +92,30 @@ pub extern "C" fn safe_balance(
 	params: *const u8,
 	params_size: usize,
 ) -> *mut Buffer {
-    println!("rt_ptr: {:?}", rt_ptr);
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_balance params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_balance u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_balance params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<(U256, U256), Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
         let rt = &mut *rt_ptr;
-        rt.block_on(
+        rt.block_on({
         	Safe::balance(safe)
         
-        )
+        })
     };
     
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
     
     
     
-    println!("safe_balance ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_balance ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -157,33 +130,27 @@ pub extern "C" fn safe_connect(
 	params: *const u8,
 	params_size: usize,
 ) -> *mut Buffer {
-    println!("rt_ptr: {:?}", rt_ptr);
-    
-    println!("safe_connect params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
     assert!(!rt_ptr.is_null());
     
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_connect u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         Vec<Multiaddr>, // peers 
         bool, // add_network_peers 
         Option<SecretKey>, // secret 
         String, // log_level 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_connect params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<Safe, Error>
         
         
         let rt = &mut *rt_ptr;
-        rt.block_on(
-        	Safe::connect(params.0, params.1, params.2, params.3)
+        rt.block_on({
+        	Safe::connect(params_de.0, params_de.1, params_de.2, params_de.3)
         
-        )
+        })
     };
     
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
@@ -192,9 +159,7 @@ pub extern "C" fn safe_connect(
     let ret: Result<usize, ErrorString> = ret.map(|value| Box::into_raw(Box::new(value)) as usize);
     
     
-    println!("safe_connect ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_connect ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -209,39 +174,31 @@ pub extern "C" fn safe_download(
 	params: *const u8,
 	params_size: usize,
 ) -> *mut Buffer {
-    println!("rt_ptr: {:?}", rt_ptr);
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_download params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_download u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         XorName, // xorname 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_download params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<Vec<u8>, Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
         let rt = &mut *rt_ptr;
-        rt.block_on(
-        	Safe::download(safe, params.0)
+        rt.block_on({
+        	Safe::download(safe, params_de.0)
         
-        )
+        })
     };
     
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
     
     
     
-    println!("safe_download ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_download ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -257,25 +214,19 @@ pub extern "C" fn safe_login(
 	params_size: usize,
 ) -> *mut Buffer {
     
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_login params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_login u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         Option<SecretKey>, // secret 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_login params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<(), Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
-        	Safe::login(safe, params.0)
+        	Safe::login(safe, params_de.0)
         
     };
     
@@ -283,9 +234,7 @@ pub extern "C" fn safe_login(
     
     
     
-    println!("safe_login ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_login ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -301,25 +250,19 @@ pub extern "C" fn safe_login_with_eth(
 	params_size: usize,
 ) -> *mut Buffer {
     
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_login_with_eth params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_login_with_eth u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         Option<String>, // eth_privkey 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_login_with_eth params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<(), Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
-        	Safe::login_with_eth(safe, params.0)
+        	Safe::login_with_eth(safe, params_de.0)
         
     };
     
@@ -327,9 +270,7 @@ pub extern "C" fn safe_login_with_eth(
     
     
     
-    println!("safe_login_with_eth ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_login_with_eth ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -345,25 +286,19 @@ pub extern "C" fn safe_log_level(
 	params_size: usize,
 ) -> *mut Buffer {
     
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_log_level params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_log_level u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         String, // level 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_log_level params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<(), Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
-        	Safe::log_level(safe, params.0)
+        	Safe::log_level(safe, params_de.0)
         
     };
     
@@ -371,9 +306,7 @@ pub extern "C" fn safe_log_level(
     
     
     
-    println!("safe_log_level ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_log_level ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -388,40 +321,32 @@ pub extern "C" fn safe_read_reg(
 	params: *const u8,
 	params_size: usize,
 ) -> *mut Buffer {
-    println!("rt_ptr: {:?}", rt_ptr);
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_read_reg params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_read_reg u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         XorName, // meta 
         Option<u32>, // version 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_read_reg params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<Vec<u8>, Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
         let rt = &mut *rt_ptr;
-        rt.block_on(
-        	Safe::read_reg(safe, &params.0, params.1)
+        rt.block_on({
+        	Safe::read_reg(safe, &params_de.0, params_de.1)
         
-        )
+        })
     };
     
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
     
     
     
-    println!("safe_read_reg ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_read_reg ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -436,40 +361,32 @@ pub extern "C" fn safe_reg_create(
 	params: *const u8,
 	params_size: usize,
 ) -> *mut Buffer {
-    println!("rt_ptr: {:?}", rt_ptr);
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_reg_create params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_reg_create u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         &[u8], // data 
         XorName, // meta 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_reg_create params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<(), Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
         let rt = &mut *rt_ptr;
-        rt.block_on(
-        	Safe::reg_create(safe, params.0, &params.1)
+        rt.block_on({
+        	Safe::reg_create(safe, params_de.0, &params_de.1)
         
-        )
+        })
     };
     
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
     
     
     
-    println!("safe_reg_create ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_reg_create ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -484,40 +401,32 @@ pub extern "C" fn safe_reg_write(
 	params: *const u8,
 	params_size: usize,
 ) -> *mut Buffer {
-    println!("rt_ptr: {:?}", rt_ptr);
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_reg_write params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_reg_write u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         &[u8], // data 
         XorName, // meta 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_reg_write params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<(), Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
         let rt = &mut *rt_ptr;
-        rt.block_on(
-        	Safe::reg_write(safe, params.0, &params.1)
+        rt.block_on({
+        	Safe::reg_write(safe, params_de.0, &params_de.1)
         
-        )
+        })
     };
     
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
     
     
     
-    println!("safe_reg_write ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_reg_write ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -532,299 +441,31 @@ pub extern "C" fn safe_upload(
 	params: *const u8,
 	params_size: usize,
 ) -> *mut Buffer {
-    println!("rt_ptr: {:?}", rt_ptr);
-    println!("safe_ptr: {:?}", safe_ptr);
-    println!("safe_upload params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
     assert!(!rt_ptr.is_null());
     assert!(!safe_ptr.is_null());
     
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("safe_upload u8: {:?}", params);
+    let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params: (
+    let params_de: (
     
         &[u8], // data 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("safe_upload params: {:?}", params);
+    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
 
     let ret = unsafe { // Result<XorName, Error>
-        let safe = &mut std::ptr::read(safe_ptr);
+        let safe = &mut *safe_ptr;
         
         let rt = &mut *rt_ptr;
-        rt.block_on(
-        	Safe::upload(safe, params.0)
+        rt.block_on({
+        	Safe::upload(safe, params_de.0)
         
-        )
+        })
     };
     
     let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
     
     
     
-    println!("safe_upload ret: {:?}", &ret);
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("safe_upload ret_bytes: {}", hex::encode_upper(&ret_bytes));
-	let data = ret_bytes.as_mut_ptr();
-	let len = ret_bytes.len();
-	std::mem::forget(ret_bytes);
-
-	Box::into_raw(Box::new(Buffer { data, len }))
-}
-
-#[no_mangle]
-pub extern "C" fn xornamebuilder_build(
-	
-	xornamebuilder_ptr: *mut XorNameBuilder,
-	params: *const u8,
-	params_size: usize,
-) -> *mut Buffer {
-    
-    println!("xornamebuilder_ptr: {:?}", xornamebuilder_ptr);
-    println!("xornamebuilder_build params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
-    assert!(!xornamebuilder_ptr.is_null());
-    
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("xornamebuilder_build u8: {:?}", params);
-
-    let params: (
-    
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("xornamebuilder_build params: {:?}", params);
-
-    let ret = unsafe { // XorName
-        let xornamebuilder = std::ptr::read(xornamebuilder_ptr);
-        
-        	XorNameBuilder::build(xornamebuilder)
-        
-    };
-    
-    
-    
-    println!("xornamebuilder_build ret: {:?}", &ret);
-	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("xornamebuilder_build ret_bytes: {}", hex::encode_upper(&ret_bytes));
-	let data = ret_bytes.as_mut_ptr();
-	let len = ret_bytes.len();
-	std::mem::forget(ret_bytes);
-
-	Box::into_raw(Box::new(Buffer { data, len }))
-}
-
-#[no_mangle]
-pub extern "C" fn xornamebuilder_from(
-	
-	
-	params: *const u8,
-	params_size: usize,
-) -> *mut Buffer {
-    
-    
-    println!("xornamebuilder_from params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
-    
-    
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("xornamebuilder_from u8: {:?}", params);
-
-    let params: (
-    
-        XorName, // xor_name 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("xornamebuilder_from params: {:?}", params);
-
-    let ret = unsafe { // XorNameBuilder
-        
-        
-        	XorNameBuilder::from(&params.0)
-        
-    };
-    
-    
-    
-    let ret: usize = Box::into_raw(Box::new(ret)) as usize;
-    
-    println!("xornamebuilder_from ret: {:?}", &ret);
-	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("xornamebuilder_from ret_bytes: {}", hex::encode_upper(&ret_bytes));
-	let data = ret_bytes.as_mut_ptr();
-	let len = ret_bytes.len();
-	std::mem::forget(ret_bytes);
-
-	Box::into_raw(Box::new(Buffer { data, len }))
-}
-
-#[no_mangle]
-pub extern "C" fn xornamebuilder_from_str(
-	
-	
-	params: *const u8,
-	params_size: usize,
-) -> *mut Buffer {
-    
-    
-    println!("xornamebuilder_from_str params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
-    
-    
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("xornamebuilder_from_str u8: {:?}", params);
-
-    let params: (
-    
-        &str, // name 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("xornamebuilder_from_str params: {:?}", params);
-
-    let ret = unsafe { // XorNameBuilder
-        
-        
-        	XorNameBuilder::from_str(params.0)
-        
-    };
-    
-    
-    
-    let ret: usize = Box::into_raw(Box::new(ret)) as usize;
-    
-    println!("xornamebuilder_from_str ret: {:?}", &ret);
-	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("xornamebuilder_from_str ret_bytes: {}", hex::encode_upper(&ret_bytes));
-	let data = ret_bytes.as_mut_ptr();
-	let len = ret_bytes.len();
-	std::mem::forget(ret_bytes);
-
-	Box::into_raw(Box::new(Buffer { data, len }))
-}
-
-#[no_mangle]
-pub extern "C" fn xornamebuilder_random(
-	
-	
-	params: *const u8,
-	params_size: usize,
-) -> *mut Buffer {
-    
-    
-    println!("xornamebuilder_random params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
-    
-    
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("xornamebuilder_random u8: {:?}", params);
-
-    let params: (
-    
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("xornamebuilder_random params: {:?}", params);
-
-    let ret = unsafe { // XorNameBuilder
-        
-        
-        	XorNameBuilder::random()
-        
-    };
-    
-    
-    
-    let ret: usize = Box::into_raw(Box::new(ret)) as usize;
-    
-    println!("xornamebuilder_random ret: {:?}", &ret);
-	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("xornamebuilder_random ret_bytes: {}", hex::encode_upper(&ret_bytes));
-	let data = ret_bytes.as_mut_ptr();
-	let len = ret_bytes.len();
-	std::mem::forget(ret_bytes);
-
-	Box::into_raw(Box::new(Buffer { data, len }))
-}
-
-#[no_mangle]
-pub extern "C" fn xornamebuilder_with_bytes(
-	
-	xornamebuilder_ptr: *mut XorNameBuilder,
-	params: *const u8,
-	params_size: usize,
-) -> *mut Buffer {
-    
-    println!("xornamebuilder_ptr: {:?}", xornamebuilder_ptr);
-    println!("xornamebuilder_with_bytes params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
-    assert!(!xornamebuilder_ptr.is_null());
-    
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("xornamebuilder_with_bytes u8: {:?}", params);
-
-    let params: (
-    
-        &[u8], // name 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("xornamebuilder_with_bytes params: {:?}", params);
-
-    let ret = unsafe { // XorNameBuilder
-        let xornamebuilder = std::ptr::read(xornamebuilder_ptr);
-        
-        	XorNameBuilder::with_bytes(xornamebuilder, params.0)
-        
-    };
-    
-    
-    
-    let ret: usize = Box::into_raw(Box::new(ret)) as usize;
-    
-    println!("xornamebuilder_with_bytes ret: {:?}", &ret);
-	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("xornamebuilder_with_bytes ret_bytes: {}", hex::encode_upper(&ret_bytes));
-	let data = ret_bytes.as_mut_ptr();
-	let len = ret_bytes.len();
-	std::mem::forget(ret_bytes);
-
-	Box::into_raw(Box::new(Buffer { data, len }))
-}
-
-#[no_mangle]
-pub extern "C" fn xornamebuilder_with_str(
-	
-	xornamebuilder_ptr: *mut XorNameBuilder,
-	params: *const u8,
-	params_size: usize,
-) -> *mut Buffer {
-    
-    println!("xornamebuilder_ptr: {:?}", xornamebuilder_ptr);
-    println!("xornamebuilder_with_str params pointer: {:?}, size: {:?} / {:x}", params, params_size, params_size);
-
-    
-    assert!(!xornamebuilder_ptr.is_null());
-    
-    let params: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
-    println!("xornamebuilder_with_str u8: {:?}", params);
-
-    let params: (
-    
-        &str, // name 
-    ) = from_redbin(params).map_err(|e| { eprintln!("cannot deserialize: {:?}", e); e }).unwrap();
-    println!("xornamebuilder_with_str params: {:?}", params);
-
-    let ret = unsafe { // XorNameBuilder
-        let xornamebuilder = std::ptr::read(xornamebuilder_ptr);
-        
-        	XorNameBuilder::with_str(xornamebuilder, params.0)
-        
-    };
-    
-    
-    
-    let ret: usize = Box::into_raw(Box::new(ret)) as usize;
-    
-    println!("xornamebuilder_with_str ret: {:?}", &ret);
-	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
-    println!("xornamebuilder_with_str ret_bytes: {}", hex::encode_upper(&ret_bytes));
 	let data = ret_bytes.as_mut_ptr();
 	let len = ret_bytes.len();
 	std::mem::forget(ret_bytes);
@@ -855,7 +496,6 @@ pub extern "C" fn buffer_free(buf: *mut Buffer) {
 		assert!(!buf.is_null());
 		&mut *buf
 	};
-	println!("buffer_free buf: {:?}", buf);
 
 	let b: &mut [u8] = unsafe { std::slice::from_raw_parts_mut(buf.data, buf.len) };
 	unsafe {

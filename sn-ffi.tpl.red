@@ -78,7 +78,7 @@ sn-ffi-result: function [v] [		;; unwrap() in Rust's terms
 		paren! = type? v
 		"Err" = v/1
 	] [
-		probe v/2/1
+		v/2/1
 		do make error! v/2/2
 	]
 	
@@ -147,18 +147,23 @@ s-afe-c-on-nect: function [
     comment {bg-end:s-afe_c-onnect_PARAM}
     ;; returns: Result<(), Error> unwrapped converted into integer!.
 ] [
+	params-block: reduce [comment {bg:s-afe_c-onnect_PARAM [PARAMNAME: "app-keypair"]} app-keypair comment {bg-end:s-afe_c-onnect_PARAM}]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [comment {bg:s-afe_c-onnect_PARAM [PARAMNAME: "app-keypair"]} app-keypair comment {bg-end:s-afe_c-onnect_PARAM}]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_s-afe_c-onnect
+	length? params
+	result-buf: r_s-afe_c-onnect
 		comment {bg:s-afe_c-onnect_SELF []} ref comment {bg-end:s-afe_c-onnect_SELF}
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	comment {bg:s-afe_c-onnect_RETURN_REF []}
 	to integer! skip reverse result 4 comment {bg-end:s-afe_c-onnect_RETURN_REF}
 ]
@@ -169,22 +174,13 @@ r_s-afe_c-onnect: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	comment {bg:s-afe_c-onnect_ASYNC []} print [tokio_runtime "^/"] comment {bg-end:s-afe_c-onnect_ASYNC}
-	comment {bg:s-afe_c-onnect_SELF []} print [as int-ptr! ref "^/"] comment {bg-end:s-afe_c-onnect_SELF}
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_s-afe_c-onnect
 		comment {bg:s-afe_c-onnect_ASYNC []} tokio_runtime comment {bg-end:s-afe_c-onnect_ASYNC}
 		comment {bg:s-afe_c-onnect_SELF []} as int-ptr! ref comment {bg-end:s-afe_c-onnect_SELF}
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -256,25 +252,3 @@ s-afe!: object [
 
 ]
 comment {bg-end:OBJ}
-
-
-build-xorname: function [
-	from [word! binary! string!]	; use word `random as good practice
-	names [block!]					; block of strings and binaries
-	return: [binary!]				; xorname
-] [
-	builder-ref: switch type? from [
-		word! [ xornamebuilder-random ]
-		binary! [ xornamebuilder-from from ]
-		string! [ xornamebuilder-from-str from ]
-	]
-
-	foreach name names [
-		switch type? name [
-			binary! [ xornamebuilder-with-bytes builder-ref name ]
-			string! [ xornamebuilder-with-str builder-ref name ]
-		]
-	]
-
-	xornamebuilder-build builder-ref
-]

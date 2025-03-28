@@ -19,13 +19,7 @@ paramtype: [some [some paramtype-chars | paren]]
 blacklist: [			;-- blacklist. specify entire objects or specific methods:
 						;-- "BlacklistedObject"
 						;-- "OtherObject" ["blacklisted_method_1" "blacklisted_method_2"]
-	"WalletClient" [
-		"pay_for_records"			; param: BTreeMap<XorName
-		"pay_for_storage"			; param: impl Iterator<Item = NetworkAddress>
-	]
-	"Files" [
-		"get_local_payment_and_upload_chunk"	; param: Option<OwnedSemaphorePermit>
-	]
+	"XorNameBuilder"				; will implement this in Red
 ]
 blacklisted?: function [
 	obj [string!]
@@ -43,7 +37,7 @@ blacklisted?: function [
 	]
 ]
 string-types: ["String" "XorUrlBase" "XorUrl"]
-ref-types: ["XorNameBuilder"]
+ref-types: []
 
 
 clean: function [code [string!]] [
@@ -372,8 +366,8 @@ generate-rust: function [
 							vars/PARAMTYPE: param-type
 						]
 
-						find ref-types param-type [
-							vars/BORROW: rejoin [borrow "std::ptr::read("]
+						find ref-types param-type [		;; example param output: "&std::ptr::read(params_de.0 as *const XorNameBuilder)"
+							vars/BORROW: rejoin [borrow "std::ptr::read("]		;; but not sure if forcing copy is ok here...
 							vars/PARAMTYPE: "usize"
 							vars/PARAMNUM: rejoin [param-num " as *const " param-type ")"]
 						]

@@ -7,8 +7,6 @@ module-system-notes.red
 notki.txt
 parse-play.red
 play.red
-red-15jan25-498cc9db8
-red-toolchain-10feb24-1c3cd7363
-red-toolchain-15jan25-498cc9db8
+red-*
 self_play
 self_play.red

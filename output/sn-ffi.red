@@ -115,65 +115,6 @@ Red [
 
 
 
-	
-			c_xornamebuilder_free: "xornamebuilder_free" [
-				ref [int-ptr!]
-			]
-
-	
-
-	
-			c_xornamebuilder_build: "xornamebuilder_build" [
-				
-				 ref [int-ptr!] 
-				params [byte-ptr!]
-				params_size [integer!]
-				return: [buffer!]
-			]
-	
-			c_xornamebuilder_from: "xornamebuilder_from" [
-				
-				
-				params [byte-ptr!]
-				params_size [integer!]
-				return: [buffer!]
-			]
-	
-			c_xornamebuilder_from_str: "xornamebuilder_from_str" [
-				
-				
-				params [byte-ptr!]
-				params_size [integer!]
-				return: [buffer!]
-			]
-	
-			c_xornamebuilder_random: "xornamebuilder_random" [
-				
-				
-				params [byte-ptr!]
-				params_size [integer!]
-				return: [buffer!]
-			]
-	
-			c_xornamebuilder_with_bytes: "xornamebuilder_with_bytes" [
-				
-				 ref [int-ptr!] 
-				params [byte-ptr!]
-				params_size [integer!]
-				return: [buffer!]
-			]
-	
-			c_xornamebuilder_with_str: "xornamebuilder_with_str" [
-				
-				 ref [int-ptr!] 
-				params [byte-ptr!]
-				params_size [integer!]
-				return: [buffer!]
-			]
-	
-
-
-
 			init_runtime: "init_runtime" [
 				return: [int-ptr!]
 			]
@@ -200,7 +141,7 @@ sn-ffi-result: function [v] [		;; unwrap() in Rust's terms
 		paren! = type? v
 		"Err" = v/1
 	] [
-		probe v/2/1
+		v/2/1
 		do make error! v/2/2
 	]
 	
@@ -233,18 +174,23 @@ safe-address: function [
     
     ;; returns: Result<EvmAddress, Error> unwrapped.
 ] [
+	params-block: reduce []
 	params: to binary! ""
 	save/as
 		params
-		probe reduce []
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_address
+	length? params
+	result-buf: r_safe_address
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -254,22 +200,13 @@ r_safe_address: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_address
 		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -281,18 +218,23 @@ safe-balance: function [
     
     ;; returns: Result<(U256, U256), Error> unwrapped.
 ] [
+	params-block: reduce []
 	params: to binary! ""
 	save/as
 		params
-		probe reduce []
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_balance
+	length? params
+	result-buf: r_safe_balance
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -302,22 +244,13 @@ r_safe_balance: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	 print [tokio_runtime "^/"] 
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_balance
 		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -333,18 +266,23 @@ safe-connect: function [
     
     ;; returns: Result<Safe, Error> unwrapped converted into integer!.
 ] [
+	params-block: reduce [ peers  add_network_peers  secret  log_level ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ peers  add_network_peers  secret  log_level ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_connect
+	length? params
+	result-buf: r_safe_connect
 		
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 	to integer! skip reverse result 4 
 ]
@@ -355,22 +293,13 @@ r_safe_connect: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	 print [tokio_runtime "^/"] 
-	
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_connect
 		 tokio_runtime 
 		
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -383,18 +312,23 @@ safe-download: function [
     
     ;; returns: Result<Vec<u8>, Error> unwrapped.
 ] [
+	params-block: reduce [ xorname ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ xorname ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_download
+	length? params
+	result-buf: r_safe_download
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -404,22 +338,13 @@ r_safe_download: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	 print [tokio_runtime "^/"] 
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_download
 		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -432,18 +357,23 @@ safe-login: function [
     
     ;; returns: Result<(), Error> unwrapped.
 ] [
+	params-block: reduce [ secret ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ secret ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_login
+	length? params
+	result-buf: r_safe_login
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -453,22 +383,13 @@ r_safe_login: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_login
 		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -481,18 +402,23 @@ safe-login-with-eth: function [
     
     ;; returns: Result<(), Error> unwrapped.
 ] [
+	params-block: reduce [ eth_privkey ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ eth_privkey ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_login_with_eth
+	length? params
+	result-buf: r_safe_login_with_eth
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -502,22 +428,13 @@ r_safe_login_with_eth: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_login_with_eth
 		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -530,18 +447,23 @@ safe-log-level: function [
     
     ;; returns: Result<(), Error> unwrapped.
 ] [
+	params-block: reduce [ level ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ level ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_log_level
+	length? params
+	result-buf: r_safe_log_level
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -551,22 +473,13 @@ r_safe_log_level: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_log_level
 		
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -580,18 +493,23 @@ safe-read-reg: function [
     
     ;; returns: Result<Vec<u8>, Error> unwrapped.
 ] [
+	params-block: reduce [ meta  version ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ meta  version ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_read_reg
+	length? params
+	result-buf: r_safe_read_reg
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -601,22 +519,13 @@ r_safe_read_reg: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	 print [tokio_runtime "^/"] 
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_read_reg
 		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -630,18 +539,23 @@ safe-reg-create: function [
     
     ;; returns: Result<(), Error> unwrapped.
 ] [
+	params-block: reduce [ data  meta ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ data  meta ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_reg_create
+	length? params
+	result-buf: r_safe_reg_create
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -651,22 +565,13 @@ r_safe_reg_create: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	 print [tokio_runtime "^/"] 
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_reg_create
 		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -680,18 +585,23 @@ safe-reg-write: function [
     
     ;; returns: Result<(), Error> unwrapped.
 ] [
+	params-block: reduce [ data  meta ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ data  meta ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_reg_write
+	length? params
+	result-buf: r_safe_reg_write
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -701,22 +611,13 @@ r_safe_reg_write: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	 print [tokio_runtime "^/"] 
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_reg_write
 		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -729,18 +630,23 @@ safe-upload: function [
     
     ;; returns: Result<XorName, Error> unwrapped.
 ] [
+	params-block: reduce [ data ]
 	params: to binary! ""
 	save/as
 		params
-		probe reduce [ data ]
+		either empty? params-block [
+			none				;; to match Rust's (), which is deserialized from red's none instead of empty block.
+		] [
+			params-block
+		]
 		'redbin
 
-	probe length? params
-	probe result-buf: r_safe_upload
+	length? params
+	result-buf: r_safe_upload
 		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
+		params
+	result: load/as result-buf 'redbin
+	result: sn-ffi-result result
 	
 ]
 
@@ -750,333 +656,13 @@ r_safe_upload: routine [
 	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
 	/local buffer ret
 ] [
-	 print [tokio_runtime "^/"] 
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
 	buffer: c_safe_upload
 		 tokio_runtime 
 		 as int-ptr! ref 
 		binary/rs-head params
 		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
 	
 	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
-
-	buffer_free buffer
-	as red-binary! SET_RETURN(ret)
-]
-
-
-
-
-
-
-xornamebuilder_free: routine [
-	ref [integer!]
-] [
-	c_xornamebuilder_free as int-ptr! ref
-]
-
-
-
-
-
-xornamebuilder-build: function [
-	 ref [integer!] 
-    
-    ;; returns: XorName.
-] [
-	params: to binary! ""
-	save/as
-		params
-		probe reduce []
-		'redbin
-
-	probe length? params
-	probe result-buf: r_xornamebuilder_build
-		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
-	
-]
-
-r_xornamebuilder_build: routine [
-	 ref [integer!] 
-	params [binary!]
-	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
-	/local buffer ret
-] [
-	
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
-	buffer: c_xornamebuilder_build
-		
-		 as int-ptr! ref 
-		binary/rs-head params
-		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
-	
-	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
-
-	buffer_free buffer
-	as red-binary! SET_RETURN(ret)
-]
-
-
-xornamebuilder-from: function [
-	
-     xor_name			;; in rust: &XorName
-    
-    ;; returns: XorNameBuilder converted into integer!.
-] [
-	params: to binary! ""
-	save/as
-		params
-		probe reduce [ xor_name ]
-		'redbin
-
-	probe length? params
-	probe result-buf: r_xornamebuilder_from
-		
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
-	
-	to integer! skip reverse result 4 
-]
-
-r_xornamebuilder_from: routine [
-	
-	params [binary!]
-	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
-	/local buffer ret
-] [
-	
-	
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
-	buffer: c_xornamebuilder_from
-		
-		
-		binary/rs-head params
-		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
-	
-	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
-
-	buffer_free buffer
-	as red-binary! SET_RETURN(ret)
-]
-
-
-xornamebuilder-from-str: function [
-	
-     name			;; in rust: &str
-    
-    ;; returns: XorNameBuilder converted into integer!.
-] [
-	params: to binary! ""
-	save/as
-		params
-		probe reduce [ name ]
-		'redbin
-
-	probe length? params
-	probe result-buf: r_xornamebuilder_from_str
-		
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
-	
-	to integer! skip reverse result 4 
-]
-
-r_xornamebuilder_from_str: routine [
-	
-	params [binary!]
-	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
-	/local buffer ret
-] [
-	
-	
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
-	buffer: c_xornamebuilder_from_str
-		
-		
-		binary/rs-head params
-		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
-	
-	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
-
-	buffer_free buffer
-	as red-binary! SET_RETURN(ret)
-]
-
-
-xornamebuilder-random: function [
-	
-    
-    ;; returns: XorNameBuilder converted into integer!.
-] [
-	params: to binary! ""
-	save/as
-		params
-		probe reduce []
-		'redbin
-
-	probe length? params
-	probe result-buf: r_xornamebuilder_random
-		
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
-	
-	to integer! skip reverse result 4 
-]
-
-r_xornamebuilder_random: routine [
-	
-	params [binary!]
-	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
-	/local buffer ret
-] [
-	
-	
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
-	buffer: c_xornamebuilder_random
-		
-		
-		binary/rs-head params
-		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
-	
-	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
-
-	buffer_free buffer
-	as red-binary! SET_RETURN(ret)
-]
-
-
-xornamebuilder-with-bytes: function [
-	 ref [integer!] 
-     name			;; in rust: &[u8]
-    
-    ;; returns: XorNameBuilder converted into integer!.
-] [
-	params: to binary! ""
-	save/as
-		params
-		probe reduce [ name ]
-		'redbin
-
-	probe length? params
-	probe result-buf: r_xornamebuilder_with_bytes
-		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
-	
-	to integer! skip reverse result 4 
-]
-
-r_xornamebuilder_with_bytes: routine [
-	 ref [integer!] 
-	params [binary!]
-	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
-	/local buffer ret
-] [
-	
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
-	buffer: c_xornamebuilder_with_bytes
-		
-		 as int-ptr! ref 
-		binary/rs-head params
-		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
-	
-	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
-
-	buffer_free buffer
-	as red-binary! SET_RETURN(ret)
-]
-
-
-xornamebuilder-with-str: function [
-	 ref [integer!] 
-     name			;; in rust: &str
-    
-    ;; returns: XorNameBuilder converted into integer!.
-] [
-	params: to binary! ""
-	save/as
-		params
-		probe reduce [ name ]
-		'redbin
-
-	probe length? params
-	probe result-buf: r_xornamebuilder_with_str
-		 ref 
-		probe params
-	result: probe load/as result-buf 'redbin
-	result: probe sn-ffi-result result
-	
-	to integer! skip reverse result 4 
-]
-
-r_xornamebuilder_with_str: routine [
-	 ref [integer!] 
-	params [binary!]
-	return: [binary!]		;-- redbin-encoded Result<usize, ErrorString> or Result<T, ErrorString>
-	/local buffer ret
-] [
-	
-	 print [as int-ptr! ref "^/"] 
-	print [binary/rs-head params "^/"]
-	print [binary/rs-length? params "^/"]
-
-	buffer: c_xornamebuilder_with_str
-		
-		 as int-ptr! ref 
-		binary/rs-head params
-		binary/rs-length? params
-	print ["buffer: " buffer "^/"]
-	print ["buffer data: " buffer/data "^/"]
-	print ["buffer len: " buffer/len "^/"]
-	
-	ret: binary/load buffer/data buffer/len
-	print ["ret: " ret "^/"]
 
 	buffer_free buffer
 	as red-binary! SET_RETURN(ret)
@@ -1245,102 +831,3 @@ safe!: object [
 
 ]
 
-xornamebuilder!: object [
-	ref: none
-
-	
-	free: does [
-		xornamebuilder_free ref
-		ref: none
-	]
-
-	
-	
-	
-	build: function [
-	    
-	    ;; returns: XorName
-	] [
-		xornamebuilder-build
-			 ref 
-			
-	]
-	
-	from: function [
-	     xor_name			;; in rust: &XorName
-	    
-	    ;; returns: XorNameBuilder
-	] [
-		self/ref: xornamebuilder-from
-			
-			 xor_name
-			
-	]
-	
-	from-str: function [
-	     name			;; in rust: &str
-	    
-	    ;; returns: XorNameBuilder
-	] [
-		self/ref: xornamebuilder-from-str
-			
-			 name
-			
-	]
-	
-	random: function [
-	    
-	    ;; returns: XorNameBuilder
-	] [
-		self/ref: xornamebuilder-random
-			
-			
-	]
-	
-	with-bytes: function [
-	     name			;; in rust: &[u8]
-	    
-	    ;; returns: XorNameBuilder
-	] [
-		self/ref: xornamebuilder-with-bytes
-			 ref 
-			 name
-			
-	]
-	
-	with-str: function [
-	     name			;; in rust: &str
-	    
-	    ;; returns: XorNameBuilder
-	] [
-		self/ref: xornamebuilder-with-str
-			 ref 
-			 name
-			
-	]
-	
-
-]
-
-
-
-build-xorname: function [
-	from [word! binary! string!]	; use word `random as good practice
-	names [block!]					; block of strings and binaries
-	return: [binary!]				; xorname
-] [
-	builder-ref: switch type? from [
-		word! [ xornamebuilder-random ]
-		binary! [ xornamebuilder-from from ]
-		string! [ xornamebuilder-from-str from ]
-	]
-
-	foreach name names [
-		switch type? name [
-			binary! [ xornamebuilder-with-bytes builder-ref name ]
-			string! [ xornamebuilder-with-str builder-ref name ]
-		]
-	]
-
-	xornamebuilder-build builder-ref
-]
