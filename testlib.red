@@ -66,6 +66,7 @@ context [
 				res/status: 'pass
 			] [
 				res/status: 'fail
+				res/expected: :code
 				throw/name none 'expect-fail
 			]
 			

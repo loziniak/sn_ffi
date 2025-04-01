@@ -1,5 +1,5 @@
 Red [
-	description: "Long bi-hexadecimal (radix 256, byte is a digit) numbers crude math"
+	description: "Long bi-hexadecimal (radix 256, byte is a digit) numbers crude math. Keeps float! precision even with very big/small numbers."
 	see-also: "https://madformath.com/calculators/digital-systems/hexadecimal-arithmetic/hexadecimal-division-calculator-with-fractions/hexadecimal-division-calculator-with-fractions"
 	author: loziniak
 ]
@@ -57,7 +57,7 @@ longhex: context [
 	sub: function [a b] [
 		a: copy a
 		b: copy b
-		if (length? a) < (length? b) [return copy #{}]
+		if (length? a) < (length? b) [return copy #{}] ;-- less than 0
 
 		ret: copy #{}
 		borrowed?: no
@@ -69,7 +69,7 @@ longhex: context [
 
 			either da < db [
 				either empty? a [
-					return copy #{}
+					return copy #{}		 ;-- less than 0
 				] [
 					da: 256 + da
 					borrowed?: yes
