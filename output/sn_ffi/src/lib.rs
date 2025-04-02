@@ -62,20 +62,26 @@ pub extern "C" fn safe_address(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<EvmAddress, Error>
-        let safe = &mut *safe_ptr;
-        
-        	Safe::address(safe)
-        
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<EvmAddress, Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        	Safe::address(safe)
+		        
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -97,23 +103,29 @@ pub extern "C" fn safe_balance(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<(U256, U256), Error>
-        let safe = &mut *safe_ptr;
-        
-        let rt = &mut *rt_ptr;
-        rt.block_on({
-        	Safe::balance(safe)
-        
-        })
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<(U256, U256), Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        let rt = &mut *rt_ptr;
+		        rt.block_on({
+		        	Safe::balance(safe)
+		        
+		        })
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -135,29 +147,35 @@ pub extern "C" fn safe_connect(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         Vec<Multiaddr>, // peers 
         bool, // add_network_peers 
         Option<SecretKey>, // secret 
         String, // log_level 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<Safe, Error>
-        
-        
-        let rt = &mut *rt_ptr;
-        rt.block_on({
-        	Safe::connect(params_de.0, params_de.1, params_de.2, params_de.3)
-        
-        })
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<Safe, Error>
+		        
+		        
+		        let rt = &mut *rt_ptr;
+		        rt.block_on({
+		        	Safe::connect(params_de.0, params_de.1, params_de.2, params_de.3)
+		        
+		        })
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    let ret: Result<usize, ErrorString> = ret.map(|value| Box::into_raw(Box::new(value)) as usize);
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
-    let ret: Result<usize, ErrorString> = ret.map(|value| Box::into_raw(Box::new(value)) as usize);
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -179,24 +197,30 @@ pub extern "C" fn safe_download(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         XorName, // xorname 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<Vec<u8>, Error>
-        let safe = &mut *safe_ptr;
-        
-        let rt = &mut *rt_ptr;
-        rt.block_on({
-        	Safe::download(safe, params_de.0)
-        
-        })
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<Vec<u8>, Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        let rt = &mut *rt_ptr;
+		        rt.block_on({
+		        	Safe::download(safe, params_de.0)
+		        
+		        })
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -218,21 +242,27 @@ pub extern "C" fn safe_login(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         Option<SecretKey>, // secret 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<(), Error>
-        let safe = &mut *safe_ptr;
-        
-        	Safe::login(safe, params_de.0)
-        
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<(), Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        	Safe::login(safe, params_de.0)
+		        
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -254,21 +284,27 @@ pub extern "C" fn safe_login_with_eth(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         Option<String>, // eth_privkey 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<(), Error>
-        let safe = &mut *safe_ptr;
-        
-        	Safe::login_with_eth(safe, params_de.0)
-        
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<(), Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        	Safe::login_with_eth(safe, params_de.0)
+		        
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -290,21 +326,27 @@ pub extern "C" fn safe_log_level(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         String, // level 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<(), Error>
-        let safe = &mut *safe_ptr;
-        
-        	Safe::log_level(safe, params_de.0)
-        
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<(), Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        	Safe::log_level(safe, params_de.0)
+		        
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -326,25 +368,31 @@ pub extern "C" fn safe_read_reg(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         XorName, // meta 
         Option<u32>, // version 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<Vec<u8>, Error>
-        let safe = &mut *safe_ptr;
-        
-        let rt = &mut *rt_ptr;
-        rt.block_on({
-        	Safe::read_reg(safe, &params_de.0, params_de.1)
-        
-        })
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<Vec<u8>, Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        let rt = &mut *rt_ptr;
+		        rt.block_on({
+		        	Safe::read_reg(safe, &params_de.0, params_de.1)
+		        
+		        })
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -366,25 +414,31 @@ pub extern "C" fn safe_reg_create(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         &[u8], // data 
         XorName, // meta 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<(), Error>
-        let safe = &mut *safe_ptr;
-        
-        let rt = &mut *rt_ptr;
-        rt.block_on({
-        	Safe::reg_create(safe, params_de.0, &params_de.1)
-        
-        })
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<(), Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        let rt = &mut *rt_ptr;
+		        rt.block_on({
+		        	Safe::reg_create(safe, params_de.0, &params_de.1)
+		        
+		        })
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -406,25 +460,31 @@ pub extern "C" fn safe_reg_write(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         &[u8], // data 
         XorName, // meta 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<(), Error>
-        let safe = &mut *safe_ptr;
-        
-        let rt = &mut *rt_ptr;
-        rt.block_on({
-        	Safe::reg_write(safe, params_de.0, &params_de.1)
-        
-        })
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<(), Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        let rt = &mut *rt_ptr;
+		        rt.block_on({
+		        	Safe::reg_write(safe, params_de.0, &params_de.1)
+		        
+		        })
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();
@@ -446,24 +506,30 @@ pub extern "C" fn safe_upload(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     
         &[u8], // data 
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<XorName, Error>
-        let safe = &mut *safe_ptr;
-        
-        let rt = &mut *rt_ptr;
-        rt.block_on({
-        	Safe::upload(safe, params_de.0)
-        
-        })
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<XorName, Error>
+		        let safe = &mut *safe_ptr;
+		        
+		        let rt = &mut *rt_ptr;
+		        rt.block_on({
+		        	Safe::upload(safe, params_de.0)
+		        
+		        })
+		    };
+		    
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    
+		    
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    
-    
     
 	let mut ret_bytes: Vec<u8> = to_redbin(&ret).unwrap();
 	let data = ret_bytes.as_mut_ptr();

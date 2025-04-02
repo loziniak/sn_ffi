@@ -38,7 +38,7 @@ context [
 
 	set 'make-xorname function [
 		sources [block!]
-		return: [binary!]
+		return: [string!]
 	] [
 		xorname: none
 		names: copy []
@@ -46,8 +46,8 @@ context [
 			['random (
 				xorname: rnd-xorname
 			)
-			| 'from copy xorname binary! (
-				xorname: first xorname
+			| 'from-xorname copy xorname string! (
+				xorname: debase/base first xorname 16
 			)
 			| 'from copy name string! (
 				xorname: checksum  to binary! first name  'SHA256
@@ -62,12 +62,12 @@ context [
 			]
 		]
 
-		unless empty? names [ ; workaround
+		unless empty? names [ ; workaround for https://github.com/red/red/issues/5607
 			forall names [
 				xorname: xorname xor (first names)
 			]
 		]
-		xorname
+		enbase/base xorname 16
 	]
 ]
 

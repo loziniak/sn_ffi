@@ -29,22 +29,59 @@ print safe/address
 print "^/^/^/Balance"
 foreach bal safe/balance [print u256-to-float/decimal18 addr-to-bin bal]
 
+
 print "^/^/^/Creating random reg ..."
 xorname: make-xorname [random]
-print ["^/^/^/Reg xorname: " xorname]
+print ["^/^/^/Reg xorname:" xorname]
 safe/reg-create
 	#{0101010101}
-	enbase/base xorname 16
+	xorname
 print "^/^/^/Reg created."
 
 print "^/^/^/Balance"
 foreach bal safe/balance [print u256-to-float/decimal18 addr-to-bin bal]
 
-print ["^/^/Reading reg " xorname]
+print ["^/^/Reading reg" xorname]
 data: safe/read-reg
-	enbase/base xorname 16
-	none
+	xorname
+	none						;-- version
 print ["^/^/Reg data: " data]
+
+print ["^/^/Updating reg" xorname]
+safe/reg-write
+	#{0102030405}
+	xorname
+print "^/^/^/Reg updated."
+	
+print "^/^/^/Balance"
+foreach bal safe/balance [print u256-to-float/decimal18 addr-to-bin bal]
+
+print ["^/^/Reading updated reg" xorname]
+data: safe/read-reg
+	xorname
+	none						;-- version
+print ["^/^/Reg data: " data]
+
+print ["^/^/Reading updated reg v0"]
+data: safe/read-reg
+	xorname
+	0							;-- version
+print ["^/^/Reg v0 data: " data]
+
+
+print ["^/^/Uploading data..."]
+data-xorname: safe/upload
+	#{090807060504030201}
+print ["^/^/Uploaded."]
+	
+print "^/^/^/Balance"
+foreach bal safe/balance [print u256-to-float/decimal18 addr-to-bin bal]
+
+print ["^/^/Downloading data " data-xorname]
+data: safe/download
+	data-xorname
+print ["^/^/Downloaded data: " data]
+
 
 print "^/^/^/Free"
 safe/free

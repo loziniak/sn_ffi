@@ -55,13 +55,13 @@ test "u256-to-float" [
 
 test "make-xorname" [
 	x: make-xorname [random]
-	x1: make-xorname reduce ['from x]
+	x1: make-xorname reduce ['from-xorname x]
 	assert [x = x1]
 	
-	x2: make-xorname reduce ['from x  "test"]
+	x2: make-xorname reduce ['from-xorname x  "test"]
 	assert [x1 <> x2]
 
-	x3: make-xorname reduce ['from x1  to binary! "test"]
+	x3: make-xorname reduce ['from-xorname x1  to binary! "test"]
 	assert [x2 = x3]
 ]
 

@@ -94,29 +94,35 @@ pub extern "C" fn s_afe_connect(
     
     let params_slice: &[u8] = unsafe { std::slice::from_raw_parts(params, params_size.try_into().unwrap()) };
 
-    let params_de: (
+    let params_res: Result<(
     /*bg:s_afe_connect_PARAM [
         PARAMNAME: "app_keypair"
         PARAMTYPE: "Option<Keypair>"
     ]*/
         Option<Keypair>, // app_keypair /*bg-end:s_afe_connect_PARAM*/
-    ) = from_redbin(params_slice).inspect_err(|e| eprintln!("cannot deserialize: {:?}", e)).unwrap();
+    ), ErrorString> = from_redbin(params_slice).map_err(|e| ErrorString(format!("Cannot deserialize params. {:?}", e), format!("Cannot deserialize params. {}", e)));
 
-    let ret = unsafe { // Result<(), Error>
-        /*bg:s_afe_connect_SELF [ SELF_PTR: "&mut " ]*/let s_afe = &mut *s_afe_ptr;/*bg-end:s_afe_connect_SELF*/
-        /*bg:s_afe_connect_ASYNC []*/
-        let rt = &mut *rt_ptr;
-        rt.block_on({/*bg-end:s_afe_connect_ASYNC*/
-        	Safe::connect(/*bg:s_afe_connect_SELF []*/s_afe/*bg-end:s_afe_connect_SELF*//*bg:s_afe_connect_PARAM [PARAMNUM: "0" COMMA: ", " BORROW: "&"]*/, &params_de.0/*bg-end:s_afe_connect_PARAM*/)
-        /*bg:s_afe_connect_ASYNC []*/
-        })/*bg-end:s_afe_connect_ASYNC*/
+    let ret = match params_res {
+    	Ok(params_de) => {
+    		let ret = unsafe { // Result<(), Error>
+		        /*bg:s_afe_connect_SELF [ SELF_PTR: "&mut " ]*/let s_afe = &mut *s_afe_ptr;/*bg-end:s_afe_connect_SELF*/
+		        /*bg:s_afe_connect_ASYNC []*/
+		        let rt = &mut *rt_ptr;
+		        rt.block_on({/*bg-end:s_afe_connect_ASYNC*/
+		        	Safe::connect(/*bg:s_afe_connect_SELF []*/s_afe/*bg-end:s_afe_connect_SELF*//*bg:s_afe_connect_PARAM [PARAMNUM: "0" COMMA: ", " BORROW: "&"]*/, &params_de.0/*bg-end:s_afe_connect_PARAM*/)
+		        /*bg:s_afe_connect_ASYNC []*/
+		        })/*bg-end:s_afe_connect_ASYNC*/
+		    };
+		    /*bg:s_afe_connect_RETURN_RESULT []*/
+		    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
+		    /*bg-end:s_afe_connect_RETURN_RESULT*/
+		    /*bg:s_afe_connect_RETURN_REF_RESULT []*/
+		    let ret: Result<usize, ErrorString> = ret.map(|value| Box::into_raw(Box::new(value)) as usize);
+		    /*bg-end:s_afe_connect_RETURN_REF_RESULT*/
+		    ret
+	    }
+	    Err(es) => Err(es)
     };
-    /*bg:s_afe_connect_RETURN_RESULT []*/
-    let ret = ret.map_err(|err| ErrorString(format!("{:?}", err), format!("{}", err)));
-    /*bg-end:s_afe_connect_RETURN_RESULT*/
-    /*bg:s_afe_connect_RETURN_REF_RESULT []*/
-    let ret: Result<usize, ErrorString> = ret.map(|value| Box::into_raw(Box::new(value)) as usize);
-    /*bg-end:s_afe_connect_RETURN_REF_RESULT*/
     /*bg:s_afe_connect_RETURN_REF []*/
     let ret: usize = Box::into_raw(Box::new(ret)) as usize;
     /*bg-end:s_afe_connect_RETURN_REF*/
