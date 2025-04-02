@@ -40,5 +40,11 @@ print "^/^/^/Reg created."
 print "^/^/^/Balance"
 foreach bal safe/balance [print u256-to-float/decimal18 addr-to-bin bal]
 
+print ["^/^/Reading reg " xorname]
+data: safe/read-reg
+	enbase/base xorname 16
+	none
+print ["^/^/Reg data: " data]
+
 print "^/^/^/Free"
 safe/free
